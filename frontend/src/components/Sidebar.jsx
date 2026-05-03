@@ -19,7 +19,7 @@ import StatusModal     from "./StatusModal";
 import SettingsModal   from "./SettingsModal";
 
 // ─────────────────────────────────────────────
-// NewGroupModal (kept inline — tightly coupled with sidebar users list)
+// NewGroupModal (kept inline — tightly coupled with sidebar users list) all
 // ─────────────────────────────────────────────
 function NewGroupModal({ users, onClose, onCreated, currentUserId }) {
   const [step,      setStep]      = useState(1);
