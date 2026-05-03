@@ -9,8 +9,8 @@ import {
   FiTrash2, FiCircle, FiSettings, FiChevronRight, FiUserPlus,
 } from "react-icons/fi";
 import { MdOutlineGroups, MdOutlineWifiTethering } from "react-icons/md";
+import { useTheme } from "../context/ThemeContext";
 
-// ── Avatar ───────────────────────────────────────────────────────
 function Avatar({ name, color, size = "md", online = false, img = null }) {
   const sizes = { xs: "w-7 h-7 text-xs", sm: "w-9 h-9 text-sm", md: "w-10 h-10 text-sm", lg: "w-14 h-14 text-xl", xl: "w-20 h-20 text-3xl" };
   return (
@@ -24,13 +24,12 @@ function Avatar({ name, color, size = "md", online = false, img = null }) {
   );
 }
 
-// ── My Profile Modal ─────────────────────────────────────────────
 function MyProfileModal({ user, onClose, onUpdate }) {
-  const [name, setName]       = useState(user?.name || "");
-  const [bio, setBio]         = useState(user?.bio || "");
-  const [editName, setEditName] = useState(false);
-  const [editBio, setEditBio]   = useState(false);
-  const [saving, setSaving]     = useState(false);
+  const [name,      setName]      = useState(user?.name || "");
+  const [bio,       setBio]       = useState(user?.bio || "");
+  const [editName,  setEditName]  = useState(false);
+  const [editBio,   setEditBio]   = useState(false);
+  const [saving,    setSaving]    = useState(false);
 
   const COLORS = ["#7C3AED","#2563EB","#059669","#DC2626","#D97706","#DB2777","#0891B2","#4F46E5","#7C3AED","#374151"];
 
@@ -39,8 +38,8 @@ function MyProfileModal({ user, onClose, onUpdate }) {
     try {
       const { data } = await API.put("/auth/profile", { [field]: value });
       onUpdate(data);
-      toast.success("Profile update ho gaya! ✅");
-    } catch { toast.error("Update nahi hua"); }
+      toast.success("Profile updated! ✅");
+    } catch { toast.error("Update failed"); }
     setSaving(false);
   };
 
@@ -49,18 +48,15 @@ function MyProfileModal({ user, onClose, onUpdate }) {
       <div className="w-full sm:w-96 rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] overflow-y-auto"
         style={{ background: "#111827" }} onClick={e => e.stopPropagation()}>
 
-        {/* Drag handle */}
         <div className="flex justify-center pt-3 sm:hidden">
           <div className="w-10 h-1 rounded-full bg-white/20" />
         </div>
 
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
-          <h2 className="text-white font-bold text-lg">Meri Profile</h2>
+          <h2 className="text-white font-bold text-lg">My Profile</h2>
           <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-xl"><FiX className="w-5 h-5 text-white/50" /></button>
         </div>
 
-        {/* Avatar section */}
         <div className="flex flex-col items-center py-6 px-5 border-b border-white/5">
           <div className="relative mb-4">
             <Avatar name={user?.name} color={user?.avatarColor} size="xl" online={true} />
@@ -72,10 +68,7 @@ function MyProfileModal({ user, onClose, onUpdate }) {
           <p className="text-green-400 text-xs mt-1 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" /> Online</p>
         </div>
 
-        {/* Edit fields */}
         <div className="px-5 py-4 space-y-3 border-b border-white/5">
-
-          {/* Name */}
           <div className="bg-white/5 rounded-2xl p-4">
             <p className="text-xs text-white/40 mb-1 flex items-center gap-1"><FiEdit2 className="w-3 h-3" /> Name</p>
             {editName ? (
@@ -83,8 +76,7 @@ function MyProfileModal({ user, onClose, onUpdate }) {
                 <input autoFocus value={name} onChange={e => setName(e.target.value)}
                   className="flex-1 bg-transparent text-white text-sm outline-none border-b border-primary-500 pb-0.5"
                   onKeyDown={e => { if (e.key === "Enter") { save("name", name); setEditName(false); } if (e.key === "Escape") setEditName(false); }} />
-                <button onClick={() => { save("name", name); setEditName(false); }}
-                  className="p-1.5 bg-primary-600 rounded-lg"><FiCheck className="w-3.5 h-3.5 text-white" /></button>
+                <button onClick={() => { save("name", name); setEditName(false); }} className="p-1.5 bg-primary-600 rounded-lg"><FiCheck className="w-3.5 h-3.5 text-white" /></button>
                 <button onClick={() => setEditName(false)} className="p-1.5 bg-white/10 rounded-lg"><FiX className="w-3.5 h-3.5 text-white/60" /></button>
               </div>
             ) : (
@@ -95,7 +87,6 @@ function MyProfileModal({ user, onClose, onUpdate }) {
             )}
           </div>
 
-          {/* Bio */}
           <div className="bg-white/5 rounded-2xl p-4">
             <p className="text-xs text-white/40 mb-1">Bio</p>
             {editBio ? (
@@ -104,20 +95,18 @@ function MyProfileModal({ user, onClose, onUpdate }) {
                   className="flex-1 bg-transparent text-white text-sm outline-none border-b border-primary-500 pb-0.5 resize-none"
                   onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); save("bio", bio); setEditBio(false); } }} />
                 <div className="flex flex-col gap-1">
-                  <button onClick={() => { save("bio", bio); setEditBio(false); }}
-                    className="p-1.5 bg-primary-600 rounded-lg"><FiCheck className="w-3.5 h-3.5 text-white" /></button>
+                  <button onClick={() => { save("bio", bio); setEditBio(false); }} className="p-1.5 bg-primary-600 rounded-lg"><FiCheck className="w-3.5 h-3.5 text-white" /></button>
                   <button onClick={() => setEditBio(false)} className="p-1.5 bg-white/10 rounded-lg"><FiX className="w-3.5 h-3.5 text-white/60" /></button>
                 </div>
               </div>
             ) : (
               <div className="flex items-center justify-between">
-                <p className="text-white/70 text-sm">{user?.bio || "Koi bio nahi..."}</p>
+                <p className="text-white/70 text-sm">{user?.bio || "No bio..."}</p>
                 <button onClick={() => setEditBio(true)} className="p-1 hover:bg-white/10 rounded-lg ml-2 shrink-0"><FiEdit2 className="w-3.5 h-3.5 text-white/40" /></button>
               </div>
             )}
           </div>
 
-          {/* Avatar color */}
           <div className="bg-white/5 rounded-2xl p-4">
             <p className="text-xs text-white/40 mb-2">Avatar Color</p>
             <div className="flex flex-wrap gap-2">
@@ -129,18 +118,16 @@ function MyProfileModal({ user, onClose, onUpdate }) {
             </div>
           </div>
 
-          {/* Email (read-only) */}
           <div className="bg-white/5 rounded-2xl p-4">
             <p className="text-xs text-white/40 mb-1">Email</p>
             <p className="text-white/60 text-sm">{user?.email}</p>
           </div>
         </div>
 
-        {/* Logout */}
         <div className="px-5 py-4">
           <button onClick={async () => { onClose(); await API.post("/auth/logout").catch(() => {}); window.location.reload(); }}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-red-400 border border-red-500/20 hover:bg-red-500/10 transition-colors font-medium">
-            <FiLogOut className="w-4 h-4" /> Logout
+            <FiLogOut className="w-4 h-4" /> Log Out
           </button>
         </div>
       </div>
@@ -148,20 +135,19 @@ function MyProfileModal({ user, onClose, onUpdate }) {
   );
 }
 
-// ── Status Modal ──────────────────────────────────────────────────
 function StatusModal({ onClose, currentUser }) {
   const [statuses, setStatuses] = useState([]);
   const [myStatus, setMyStatus] = useState(null);
-  const [newText, setNewText]   = useState("");
-  const [posting, setPosting]   = useState(false);
-  const [viewing, setViewing]   = useState(null); // { status, index }
+  const [newText,  setNewText]  = useState("");
+  const [posting,  setPosting]  = useState(false);
+  const [viewing,  setViewing]  = useState(null);
 
   useEffect(() => { fetchStatuses(); }, []);
 
   const fetchStatuses = async () => {
     try {
       const { data } = await API.get("/status");
-      const mine = data.find(s => s.user?._id === currentUser?._id);
+      const mine   = data.find(s => s.user?._id === currentUser?._id);
       const others = data.filter(s => s.user?._id !== currentUser?._id);
       setMyStatus(mine || null);
       setStatuses(others);
@@ -174,9 +160,9 @@ function StatusModal({ onClose, currentUser }) {
     try {
       await API.post("/status", { text: newText });
       setNewText("");
-      toast.success("Status laga diya! 🟢");
+      toast.success("Status posted! 🟢");
       fetchStatuses();
-    } catch { toast.error("Status nahi laga"); }
+    } catch { toast.error("Could not post status"); }
     setPosting(false);
   };
 
@@ -184,18 +170,18 @@ function StatusModal({ onClose, currentUser }) {
     try {
       await API.delete(`/status/${myStatus._id}`);
       setMyStatus(null);
-      toast.success("Status hata diya");
+      toast.success("Status removed");
     } catch {}
   };
 
   const timeAgo = (date) => {
     const diff = Date.now() - new Date(date);
     const m = Math.floor(diff / 60000);
-    if (m < 1) return "Abhi abhi";
-    if (m < 60) return `${m} min pehle`;
+    if (m < 1) return "Just now";
+    if (m < 60) return `${m} min ago`;
     const h = Math.floor(m / 60);
-    if (h < 24) return `${h} ghante pehle`;
-    return `${Math.floor(h / 24)} din pehle`;
+    if (h < 24) return `${h} hour${h > 1 ? "s" : ""} ago`;
+    return `${Math.floor(h / 24)} day${Math.floor(h / 24) > 1 ? "s" : ""} ago`;
   };
 
   return (
@@ -203,7 +189,6 @@ function StatusModal({ onClose, currentUser }) {
       <div className="w-full sm:w-96 rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col"
         style={{ background: "#111827" }} onClick={e => e.stopPropagation()}>
 
-        {/* Drag handle */}
         <div className="flex justify-center pt-3 sm:hidden shrink-0">
           <div className="w-10 h-1 rounded-full bg-white/20" />
         </div>
@@ -214,10 +199,8 @@ function StatusModal({ onClose, currentUser }) {
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-
-          {/* My Status */}
           <div>
-            <p className="text-xs text-white/30 font-semibold uppercase tracking-wider mb-2">Mera Status</p>
+            <p className="text-xs text-white/30 font-semibold uppercase tracking-wider mb-2">My Status</p>
             {myStatus ? (
               <div className="flex items-center gap-3 p-3 bg-white/5 rounded-2xl">
                 <div className="relative cursor-pointer" onClick={() => setViewing({ status: myStatus, mine: true })}>
@@ -225,7 +208,7 @@ function StatusModal({ onClose, currentUser }) {
                   <div className="absolute inset-0 rounded-full border-2 border-green-400" />
                 </div>
                 <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setViewing({ status: myStatus, mine: true })}>
-                  <p className="text-white text-sm font-medium">Mera Status</p>
+                  <p className="text-white text-sm font-medium">My Status</p>
                   <p className="text-white/40 text-xs truncate">{myStatus.text}</p>
                   <p className="text-white/25 text-xs">{timeAgo(myStatus.createdAt)}</p>
                 </div>
@@ -242,11 +225,11 @@ function StatusModal({ onClose, currentUser }) {
                       <FiPlus className="w-3 h-3 text-white" />
                     </div>
                   </div>
-                  <p className="text-white/60 text-sm">Apna status daalo</p>
+                  <p className="text-white/60 text-sm">Add your status</p>
                 </div>
                 <div className="flex gap-2">
                   <input value={newText} onChange={e => setNewText(e.target.value)}
-                    placeholder="Kya chal raha hai? ✨"
+                    placeholder="What's on your mind? ✨"
                     onKeyDown={e => e.key === "Enter" && postStatus()}
                     className="flex-1 bg-dark-300 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-primary-500/50" />
                   <button onClick={postStatus} disabled={posting || !newText.trim()}
@@ -258,12 +241,11 @@ function StatusModal({ onClose, currentUser }) {
             )}
           </div>
 
-          {/* Others' statuses */}
           {statuses.length > 0 && (
             <div>
               <p className="text-xs text-white/30 font-semibold uppercase tracking-wider mb-2">Recent Updates</p>
               <div className="space-y-1">
-                {statuses.map((s, i) => (
+                {statuses.map((s) => (
                   <button key={s._id} onClick={() => setViewing({ status: s, mine: false })}
                     className="w-full flex items-center gap-3 p-3 hover:bg-white/5 rounded-2xl transition-colors text-left">
                     <div className="relative">
@@ -285,26 +267,25 @@ function StatusModal({ onClose, currentUser }) {
           {statuses.length === 0 && !myStatus && (
             <div className="text-center py-8">
               <MdOutlineWifiTethering className="w-12 h-12 text-white/10 mx-auto mb-3" />
-              <p className="text-white/30 text-sm">Koi status nahi hai abhi</p>
-              <p className="text-white/15 text-xs mt-1">Pehla status tum daalo! 👆</p>
+              <p className="text-white/30 text-sm">No status updates yet</p>
+              <p className="text-white/15 text-xs mt-1">Be the first to post one! 👆</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Status Viewer */}
       {viewing && (
         <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/95" onClick={() => setViewing(null)}>
           <div className="w-full max-w-sm mx-4 text-center" onClick={e => e.stopPropagation()}>
             <div className="w-2 h-1 bg-white/30 rounded-full mx-auto mb-6 w-48" />
             <Avatar name={viewing.status.user?.name || "Me"} color={viewing.status.user?.avatarColor || currentUser?.avatarColor} size="xl" />
-            <p className="text-white font-bold text-lg mt-4">{viewing.mine ? "Mera Status" : viewing.status.user?.name}</p>
+            <p className="text-white font-bold text-lg mt-4">{viewing.mine ? "My Status" : viewing.status.user?.name}</p>
             <div className="mt-6 p-6 bg-white/5 rounded-2xl border border-white/10">
               <p className="text-white text-base leading-relaxed">{viewing.status.text}</p>
             </div>
             <p className="text-white/30 text-xs mt-3">{timeAgo(viewing.status.createdAt)}</p>
             <button onClick={() => setViewing(null)} className="mt-6 px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-white/60 text-sm transition-colors">
-              Band karo
+              Close
             </button>
           </div>
         </div>
@@ -313,27 +294,88 @@ function StatusModal({ onClose, currentUser }) {
   );
 }
 
-// ── New Group Modal ────────────────────────────────────────────────
+// ✅ SettingsModal - Theme toggle with proper useTheme hook
+function SettingsModal({ onClose }) {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full sm:w-96 rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl"
+        style={{ background: "#111827" }} onClick={e => e.stopPropagation()}>
+
+        <div className="flex justify-center pt-3 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
+
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <h2 className="text-white font-bold text-lg flex items-center gap-2">
+            <FiSettings className="w-5 h-5" /> Settings
+          </h2>
+          <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-xl">
+            <FiX className="w-5 h-5 text-white/50" />
+          </button>
+        </div>
+
+        <div className="px-5 py-4 space-y-3">
+          {/* Theme Toggle */}
+          <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{theme === "dark" ? "🌙" : "☀️"}</span>
+              <div>
+                <p className="text-white text-sm font-medium">Theme</p>
+                <p className="text-white/40 text-xs">{theme === "dark" ? "Dark Mode" : "Light Mode"}</p>
+              </div>
+            </div>
+            <button onClick={toggleTheme}
+              className={`relative w-12 h-6 rounded-full transition-all duration-300 ${theme === "dark" ? "bg-primary-600" : "bg-white/20"}`}>
+              <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-300 ${theme === "dark" ? "left-6" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between opacity-40">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔔</span>
+              <div>
+                <p className="text-white text-sm font-medium">Notifications</p>
+                <p className="text-white/40 text-xs">Coming soon...</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/5 rounded-2xl p-4 flex items-center justify-between opacity-40">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🔒</span>
+              <div>
+                <p className="text-white text-sm font-medium">Privacy</p>
+                <p className="text-white/40 text-xs">Coming soon...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function NewGroupModal({ users, onClose, onCreated, currentUserId }) {
-  const [step, setStep]         = useState(1); // 1=select members, 2=name+icon
-  const [selected, setSelected] = useState([]);
-  const [groupName, setGroupName] = useState("");
-  const [groupIcon, setGroupIcon] = useState("👥");
-  const [creating, setCreating]   = useState(false);
+  const [step,       setStep]      = useState(1);
+  const [selected,   setSelected]  = useState([]);
+  const [groupName,  setGroupName] = useState("");
+  const [groupIcon,  setGroupIcon] = useState("👥");
+  const [creating,   setCreating]  = useState(false);
   const ICONS = ["👥","🏠","🎉","💼","📚","🎮","🎵","🌟","❤️","🔥","✨","🏆"];
 
   const toggle = (id) => setSelected(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
 
   const create = async () => {
-    if (!groupName.trim()) return toast.error("Group ka naam likho");
-    if (selected.length < 1) return toast.error("Kam se kam 1 member chunno");
+    if (!groupName.trim()) return toast.error("Please enter a group name");
+    if (selected.length < 1) return toast.error("Select at least 1 member");
     setCreating(true);
     try {
       const { data } = await API.post("/rooms", { name: groupName, icon: groupIcon, members: selected });
-      toast.success("Group ban gaya! 🎉");
+      toast.success("Group created! 🎉");
       onCreated(data);
       onClose();
-    } catch { toast.error("Group nahi bana"); }
+    } catch { toast.error("Could not create group"); }
     setCreating(false);
   };
 
@@ -348,7 +390,7 @@ function NewGroupModal({ users, onClose, onCreated, currentUserId }) {
 
         <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5 shrink-0">
           {step === 2 && <button onClick={() => setStep(1)} className="p-1 hover:bg-white/10 rounded-lg"><FiChevronRight className="w-4 h-4 text-white/50 rotate-180" /></button>}
-          <h2 className="text-white font-bold text-lg flex-1">{step === 1 ? "Members Chunno" : "Group Setup"}</h2>
+          <h2 className="text-white font-bold text-lg flex-1">{step === 1 ? "Select Members" : "Group Setup"}</h2>
           <span className="text-xs text-white/30">{step}/2</span>
           <button onClick={onClose} className="p-1.5 hover:bg-white/10 rounded-xl"><FiX className="w-5 h-5 text-white/50" /></button>
         </div>
@@ -386,7 +428,7 @@ function NewGroupModal({ users, onClose, onCreated, currentUserId }) {
             <div className="px-5 py-4 border-t border-white/5 shrink-0">
               <button onClick={() => selected.length > 0 && setStep(2)} disabled={selected.length === 0}
                 className="w-full py-3.5 rounded-2xl text-white font-semibold bg-primary-600 hover:bg-primary-700 disabled:opacity-40 transition-colors flex items-center justify-center gap-2">
-                Aage <FiChevronRight className="w-4 h-4" />
+                Next <FiChevronRight className="w-4 h-4" />
               </button>
             </div>
           </>
@@ -401,7 +443,7 @@ function NewGroupModal({ users, onClose, onCreated, currentUserId }) {
               ))}
             </div>
             <input autoFocus value={groupName} onChange={e => setGroupName(e.target.value)}
-              placeholder="Group ka naam..."
+              placeholder="Group name..."
               onKeyDown={e => e.key === "Enter" && create()}
               className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white placeholder-white/25 outline-none focus:border-primary-500/50 text-sm" />
             <div className="bg-white/5 rounded-2xl p-3">
@@ -415,7 +457,7 @@ function NewGroupModal({ users, onClose, onCreated, currentUserId }) {
             </div>
             <button onClick={create} disabled={creating || !groupName.trim()}
               className="w-full py-3.5 rounded-2xl text-white font-semibold bg-primary-600 hover:bg-primary-700 disabled:opacity-40 transition-colors">
-              {creating ? "Ban raha hai..." : "Group Banao 🎉"}
+              {creating ? "Creating..." : "Create Group 🎉"}
             </button>
           </div>
         )}
@@ -424,30 +466,27 @@ function NewGroupModal({ users, onClose, onCreated, currentUserId }) {
   );
 }
 
-// ── Main Sidebar ──────────────────────────────────────────────────
 export default function Sidebar({ activeRoom, setActiveRoom }) {
   const { user, logout, setUser } = useAuth();
   const { onlineUsers }           = useSocket();
 
-  const [rooms,    setRooms]    = useState([]);
-  const [users,    setUsers]    = useState([]);
-  const [dmRooms,  setDmRooms]  = useState([]);
-  const [tab,      setTab]      = useState("dms");
-  const [search,   setSearch]   = useState("");
-
-  const [showProfile,  setShowProfile]  = useState(false);
-  const [showStatus,   setShowStatus]   = useState(false);
-  const [showNewGroup, setShowNewGroup] = useState(false);
-  const [showDotMenu,  setShowDotMenu]  = useState(false);
-  const [showNewRoom,  setShowNewRoom]  = useState(false);
-  const [newRoomName,  setNewRoomName]  = useState("");
-  const [newRoomIcon,  setNewRoomIcon]  = useState("💬");
+  const [rooms,        setRooms]       = useState([]);
+  const [users,        setUsers]       = useState([]);
+  const [dmRooms,      setDmRooms]     = useState([]);
+  const [tab,          setTab]         = useState("dms");
+  const [search,       setSearch]      = useState("");
+  const [showProfile,  setShowProfile] = useState(false);
+  const [showStatus,   setShowStatus]  = useState(false);
+  const [showNewGroup, setShowNewGroup]= useState(false);
+  const [showDotMenu,  setShowDotMenu] = useState(false);
+  const [showNewRoom,  setShowNewRoom] = useState(false);
+  const [newRoomName,  setNewRoomName] = useState("");
+  const [newRoomIcon,  setNewRoomIcon] = useState("💬");
+  const [showSettings, setShowSettings] = useState(false); // ✅ FIX 1: Sahi jagah pe
 
   const dotRef = useRef(null);
 
-  useEffect(() => {
-    fetchRooms(); fetchUsers(); fetchDMs();
-  }, []);
+  useEffect(() => { fetchRooms(); fetchUsers(); fetchDMs(); }, []);
 
   useEffect(() => {
     const handler = (e) => { if (dotRef.current && !dotRef.current.contains(e.target)) setShowDotMenu(false); };
@@ -465,75 +504,61 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
       setActiveRoom(data);
       setTab("dms");
       await fetchDMs();
-    } catch { toast.error("DM nahi khula"); }
+    } catch { toast.error("Could not open DM"); }
   };
 
   const createRoom = async () => {
-    if (!newRoomName.trim()) return toast.error("Room ka naam likho");
+    if (!newRoomName.trim()) return toast.error("Please enter a room name");
     try {
       const { data } = await API.post("/rooms", { name: newRoomName, icon: newRoomIcon });
       setRooms(prev => [...prev, data]);
       setActiveRoom(data);
       setNewRoomName(""); setShowNewRoom(false);
-      toast.success("Room ban gaya! 🎉");
-    } catch { toast.error("Room nahi bana"); }
+      toast.success("Room created! 🎉");
+    } catch { toast.error("Could not create room"); }
   };
 
   const ROOM_ICONS = ["💬","🏠","👨‍👩‍👧‍👦","🎉","💼","📚","🎮","🎵","🌟","❤️"];
 
   const TABS = [
-    { key: "dms",    icon: <FiMessageCircle className="w-4 h-4" />,   label: "Chats"  },
+    { key: "dms",    icon: <FiMessageCircle className="w-4 h-4" />,        label: "Chats"  },
     { key: "status", icon: <MdOutlineWifiTethering className="w-4 h-4" />, label: "Status" },
-    { key: "rooms",  icon: <MdOutlineGroups className="w-4 h-4" />,   label: "Groups" },
-    { key: "users",  icon: <FiUsers className="w-4 h-4" />,           label: "Users"  },
+    { key: "rooms",  icon: <MdOutlineGroups className="w-4 h-4" />,        label: "Groups" },
+    { key: "users",  icon: <FiUsers className="w-4 h-4" />,                label: "Users"  },
   ];
 
   return (
     <div className="h-full bg-dark-200 flex flex-col border-r border-white/5 select-none">
 
-      {/* ══ TOP HEADER ══ */}
+      {/* ══ HEADER ══ */}
       <div className="flex items-center gap-2 px-3 py-3 border-b border-white/5 shrink-0">
-
-        {/* My profile avatar */}
         <button onClick={() => setShowProfile(true)} className="shrink-0 active:scale-95 transition-transform">
           <Avatar name={user?.name} color={user?.avatarColor} size="md" online={true} />
         </button>
-
-        {/* App name */}
         <div className="flex-1 min-w-0">
           <p className="text-white font-bold text-base leading-tight truncate">ChatApp</p>
           <p className="text-green-400 text-xs">● {user?.name}</p>
         </div>
-
-        {/* Header icons */}
         <div className="flex items-center gap-0.5 shrink-0">
-          {/* New Group */}
-          <button onClick={() => setShowNewGroup(true)} title="New Group"
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+          <button onClick={() => setShowNewGroup(true)} title="New Group" className="p-2 hover:bg-white/10 rounded-xl transition-colors">
             <MdOutlineGroups className="w-5 h-5 text-white/50 hover:text-white" />
           </button>
-
-          {/* Status */}
-          <button onClick={() => setShowStatus(true)} title="Status"
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+          <button onClick={() => setShowStatus(true)} title="Status" className="p-2 hover:bg-white/10 rounded-xl transition-colors">
             <MdOutlineWifiTethering className="w-5 h-5 text-white/50 hover:text-white" />
           </button>
-
-          {/* 3-dot menu */}
           <div className="relative" ref={dotRef}>
-            <button onClick={() => setShowDotMenu(!showDotMenu)}
-              className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+            <button onClick={() => setShowDotMenu(!showDotMenu)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
               <FiMoreVertical className="w-5 h-5 text-white/50 hover:text-white" />
             </button>
-
             {showDotMenu && (
               <div className="absolute right-0 top-10 bg-dark-100 border border-white/10 rounded-2xl shadow-2xl z-50 w-52 py-1.5 overflow-hidden">
                 {[
-                  { icon: <FiEdit2 />,   label: "Profile Edit",  fn: () => { setShowProfile(true); setShowDotMenu(false); } },
-                  { icon: <MdOutlineWifiTethering />, label: "Status", fn: () => { setShowStatus(true); setShowDotMenu(false); } },
-                  { icon: <MdOutlineGroups />, label: "New Group", fn: () => { setShowNewGroup(true); setShowDotMenu(false); } },
-                  { icon: <FiSettings />, label: "Settings",   fn: () => { toast("Jaldi aayega! 🛠️"); setShowDotMenu(false); } },
-                  { icon: <FiLogOut />,  label: "Logout",     fn: async () => { setShowDotMenu(false); await logout(); toast.success("Bye bye! 👋"); }, red: true },
+                  { icon: <FiEdit2 />,                label: "Edit Profile", fn: () => { setShowProfile(true);  setShowDotMenu(false); } },
+                  { icon: <MdOutlineWifiTethering />, label: "Status",       fn: () => { setShowStatus(true);   setShowDotMenu(false); } },
+                  { icon: <MdOutlineGroups />,        label: "New Group",    fn: () => { setShowNewGroup(true); setShowDotMenu(false); } },
+                  // ✅ FIX 2: toast hataya, setShowSettings(true) add kiya
+                  { icon: <FiSettings />,             label: "Settings",     fn: () => { setShowSettings(true); setShowDotMenu(false); } },
+                  { icon: <FiLogOut />,               label: "Log Out",      fn: async () => { setShowDotMenu(false); await logout(); toast.success("Goodbye! 👋"); }, red: true },
                 ].map(({ icon, label, fn, red }) => (
                   <button key={label} onClick={fn}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-white/5 ${red ? "text-red-400" : "text-white/70"}`}>
@@ -572,14 +597,14 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
       {/* ══ CONTENT ══ */}
       <div className="flex-1 overflow-y-auto px-2 pb-4">
 
-        {/* ── CHATS / DMs ── */}
+        {/* ── CHATS ── */}
         {tab === "dms" && (
           <div className="space-y-0.5">
             {dmRooms.length === 0 && (
               <div className="text-center py-10">
                 <FiMessageCircle className="w-10 h-10 text-white/10 mx-auto mb-2" />
-                <p className="text-white/25 text-sm">Koi chat nahi</p>
-                <p className="text-white/15 text-xs">Users tab se kisi ko message karo</p>
+                <p className="text-white/25 text-sm">No chats yet</p>
+                <p className="text-white/15 text-xs">Message someone from the Users tab</p>
               </div>
             )}
             {dmRooms
@@ -607,7 +632,6 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
         {/* ── STATUS ── */}
         {tab === "status" && (
           <div className="space-y-3 pt-1">
-            {/* Add status quick */}
             <button onClick={() => setShowStatus(true)}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl hover:bg-white/5 transition-colors text-left">
               <div className="relative">
@@ -617,8 +641,8 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
                 </div>
               </div>
               <div>
-                <p className="text-white text-sm font-medium">Mera Status</p>
-                <p className="text-white/30 text-xs">Tap karke status daalo</p>
+                <p className="text-white text-sm font-medium">My Status</p>
+                <p className="text-white/30 text-xs">Tap to add a status</p>
               </div>
             </button>
 
@@ -636,7 +660,7 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
                   </div>
                   <div>
                     <p className="text-white text-sm font-medium">{u.name}</p>
-                    <p className="text-white/30 text-xs">Status dekhne ke liye tap karo</p>
+                    <p className="text-white/30 text-xs">Tap to view status</p>
                   </div>
                 </button>
               ))}
@@ -649,12 +673,10 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
             <div className="flex items-center justify-between px-2 py-1.5">
               <p className="text-xs font-semibold text-white/25 uppercase tracking-wider">Groups</p>
               <div className="flex gap-1">
-                <button onClick={() => setShowNewGroup(true)} title="New Group"
-                  className="p-1 hover:bg-white/10 rounded-lg">
+                <button onClick={() => setShowNewGroup(true)} title="New Group" className="p-1 hover:bg-white/10 rounded-lg">
                   <FiUserPlus className="w-3.5 h-3.5 text-white/40 hover:text-white" />
                 </button>
-                <button onClick={() => setShowNewRoom(!showNewRoom)} title="New Room"
-                  className="p-1 hover:bg-white/10 rounded-lg">
+                <button onClick={() => setShowNewRoom(!showNewRoom)} title="New Room" className="p-1 hover:bg-white/10 rounded-lg">
                   <FiPlus className="w-3.5 h-3.5 text-white/40 hover:text-white" />
                 </button>
               </div>
@@ -668,11 +690,11 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
                       className={`w-7 h-7 rounded-lg text-sm ${newRoomIcon === ic ? "bg-primary-600" : "hover:bg-white/10"}`}>{ic}</button>
                   ))}
                 </div>
-                <input type="text" placeholder="Room ka naam..." value={newRoomName}
+                <input type="text" placeholder="Room name..." value={newRoomName}
                   onChange={e => setNewRoomName(e.target.value)} onKeyDown={e => e.key === "Enter" && createRoom()}
                   className="w-full bg-dark-300 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-white/30 outline-none focus:border-primary-500/50" autoFocus />
                 <div className="flex gap-2">
-                  <button onClick={createRoom} className="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium py-1.5 rounded-xl">Banao</button>
+                  <button onClick={createRoom} className="flex-1 bg-primary-600 hover:bg-primary-700 text-white text-xs font-medium py-1.5 rounded-xl">Create</button>
                   <button onClick={() => setShowNewRoom(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white/60 text-xs font-medium py-1.5 rounded-xl">Cancel</button>
                 </div>
               </div>
@@ -697,8 +719,8 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
             {rooms.length === 0 && (
               <div className="text-center py-10">
                 <MdOutlineGroups className="w-10 h-10 text-white/10 mx-auto mb-2" />
-                <p className="text-white/25 text-sm">Koi group nahi</p>
-                <p className="text-white/15 text-xs">+ dabao naya room banane ke liye</p>
+                <p className="text-white/25 text-sm">No groups yet</p>
+                <p className="text-white/15 text-xs">Press + to create a new room</p>
               </div>
             )}
           </div>
@@ -708,7 +730,7 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
         {tab === "users" && (
           <div className="space-y-0.5">
             <p className="text-xs font-semibold text-white/25 uppercase tracking-wider px-2 py-1.5">
-              Sab Users ({users.length})
+              All Users ({users.length})
             </p>
             {users
               .filter(u => u.name.toLowerCase().includes(search.toLowerCase()))
@@ -721,7 +743,7 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
                     <Avatar name={u.name} color={u.avatarColor} size="sm" online={isOnline} />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-white truncate">
-                        {u.name}{isMe && <span className="text-white/30 font-normal"> (Tum)</span>}
+                        {u.name}{isMe && <span className="text-white/30 font-normal"> (You)</span>}
                       </p>
                       <p className="text-xs text-white/30 truncate">{u.bio || u.email}</p>
                     </div>
@@ -735,17 +757,11 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
 
       {/* ══ MODALS ══ */}
       {showProfile && (
-        <MyProfileModal
-          user={user}
-          onClose={() => setShowProfile(false)}
-          onUpdate={(updated) => { if (setUser) setUser(updated); }}
-        />
+        <MyProfileModal user={user} onClose={() => setShowProfile(false)} onUpdate={(updated) => { if (setUser) setUser(updated); }} />
       )}
-
       {showStatus && (
         <StatusModal onClose={() => setShowStatus(false)} currentUser={user} />
       )}
-
       {showNewGroup && (
         <NewGroupModal
           users={users}
@@ -753,6 +769,10 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
           onClose={() => setShowNewGroup(false)}
           onCreated={(room) => { setRooms(prev => [...prev, room]); setActiveRoom(room); setTab("rooms"); }}
         />
+      )}
+      {/* ✅ FIX 3: SettingsModal render ho raha hai ab */}
+      {showSettings && (
+        <SettingsModal onClose={() => setShowSettings(false)} />
       )}
     </div>
   );

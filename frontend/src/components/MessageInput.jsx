@@ -11,13 +11,13 @@ const EMOJIS = [
 ];
 
 export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply, roomName }) {
-  const [text, setText]               = useState("");
-  const [showEmoji, setShowEmoji]     = useState(false);
-  const [showActions, setShowActions] = useState(false); // mobile extra actions tray
-  const [isTyping, setIsTyping]       = useState(false);
-  const [recording, setRecording]     = useState(false);
+  const [text,          setText]          = useState("");
+  const [showEmoji,     setShowEmoji]     = useState(false);
+  const [showActions,   setShowActions]   = useState(false);
+  const [isTyping,      setIsTyping]      = useState(false);
+  const [recording,     setRecording]     = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [uploading, setUploading]     = useState(false);
+  const [uploading,     setUploading]     = useState(false);
 
   const typingTimer = useRef(null);
   const inputRef    = useRef(null);
@@ -32,7 +32,6 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
     clearInterval(timerRef.current);
   }, []);
 
-  // close trays when typing starts
   const handleChange = (e) => {
     setText(e.target.value);
     setShowEmoji(false);
@@ -74,7 +73,7 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
         type === "audio" ? `[AUDIO]${data.url}[/AUDIO]` :
         `[FILE]${data.name}|${data.url}[/FILE]`;
       onSend(msg);
-    } catch { alert("File upload nahi hua, dobara try karo"); }
+    } catch { alert("File upload failed, please try again"); }
     finally { setUploading(false); }
   };
 
@@ -94,7 +93,7 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
       setRecording(true);
       let t = 0;
       timerRef.current = setInterval(() => setRecordingTime(++t), 1000);
-    } catch { alert("Mic permission do browser ko!"); }
+    } catch { alert("Please grant microphone permission to your browser!"); }
   };
 
   const stopRecording = () => {
@@ -105,7 +104,7 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
   };
 
   const handlePayment = () => {
-    const amount = prompt("Payment amount (₹) likho:");
+    const amount = prompt("Enter payment amount (₹):");
     if (amount && !isNaN(amount)) onSend(`💸 Payment Request: ₹${amount}`);
   };
 
@@ -114,8 +113,6 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
       className="px-2 sm:px-4 py-2 sm:py-3 bg-dark-200/80 border-t border-white/5 shrink-0"
       onClick={() => { if (showEmoji) setShowEmoji(false); if (showActions) setShowActions(false); }}
     >
-
-      {/* ── Reply Preview ── */}
       {replyTo && (
         <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-white/5 border-l-2 border-primary-500 rounded-r-xl">
           <div className="flex-1 min-w-0">
@@ -128,7 +125,6 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
         </div>
       )}
 
-      {/* ── Recording Bar ── */}
       {recording && (
         <div className="flex items-center gap-3 mb-2 px-3 py-2 bg-red-500/10 rounded-xl border border-red-500/30">
           <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
@@ -139,20 +135,15 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
         </div>
       )}
 
-      {/* ── Uploading Bar ── */}
       {uploading && (
         <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-primary-500/10 rounded-xl border border-primary-500/30">
           <div className="w-4 h-4 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
-          <span className="text-primary-400 text-xs">Upload ho raha hai...</span>
+          <span className="text-primary-400 text-xs">Uploading...</span>
         </div>
       )}
 
-      {/* ── Emoji Picker ── */}
       {showEmoji && (
-        <div
-          className="mb-2 bg-dark-100 border border-white/10 rounded-2xl p-3 shadow-2xl"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="mb-2 bg-dark-100 border border-white/10 rounded-2xl p-3 shadow-2xl" onClick={(e) => e.stopPropagation()}>
           <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto">
             {EMOJIS.map((e) => (
               <button key={e} onClick={() => insertEmoji(e)}
@@ -164,27 +155,18 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
         </div>
       )}
 
-      {/* ── Mobile Extra Actions Tray ── */}
       {showActions && (
-        <div
-          className="mb-2 flex items-center gap-2 px-2 py-2 bg-dark-100 border border-white/10 rounded-2xl sm:hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Image */}
+        <div className="mb-2 flex items-center gap-2 px-2 py-2 bg-dark-100 border border-white/10 rounded-2xl sm:hidden" onClick={(e) => e.stopPropagation()}>
           <button onClick={() => { imageRef.current.click(); setShowActions(false); }}
             className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-white/10 transition-colors">
             <FiImage className="w-5 h-5 text-blue-400" />
             <span className="text-white/40 text-xs">Photo</span>
           </button>
-
-          {/* File */}
           <button onClick={() => { fileRef.current.click(); setShowActions(false); }}
             className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-white/10 transition-colors">
             <FiFile className="w-5 h-5 text-green-400" />
             <span className="text-white/40 text-xs">File</span>
           </button>
-
-          {/* Payment */}
           <button onClick={() => { handlePayment(); setShowActions(false); }}
             className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-white/10 transition-colors">
             <MdOutlinePayment className="w-5 h-5 text-yellow-400" />
@@ -193,16 +175,12 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
         </div>
       )}
 
-      {/* Hidden file inputs */}
       <input ref={imageRef} type="file" accept="image/*" hidden
         onChange={(e) => { handleFileUpload(e.target.files[0], "image"); e.target.value = ""; }} />
       <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt,.zip,.rar,.xlsx,.pptx" hidden
         onChange={(e) => { handleFileUpload(e.target.files[0], "file"); e.target.value = ""; }} />
 
-      {/* ── Main Row ── */}
       <div className="flex items-center gap-1.5 sm:gap-2" onClick={(e) => e.stopPropagation()}>
-
-        {/* + button — mobile only (opens action tray) */}
         <button
           onClick={() => { setShowActions(!showActions); setShowEmoji(false); }}
           className={`sm:hidden p-2.5 rounded-xl transition-all shrink-0 ${showActions ? "bg-primary-500/20 text-primary-400" : "bg-white/8 text-white/50 hover:bg-white/15"}`}
@@ -210,27 +188,22 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
           <FiPlus className={`w-5 h-5 transition-transform duration-200 ${showActions ? "rotate-45" : ""}`} />
         </button>
 
-        {/* Desktop action buttons */}
         <div className="hidden sm:flex items-center gap-0.5 shrink-0">
           <button onClick={() => setShowEmoji(!showEmoji)}
             className={`p-2 rounded-xl transition-all ${showEmoji ? "text-primary-400 bg-primary-500/20" : "text-white/40 hover:text-white/70 hover:bg-white/10"}`}>
             <FiSmile className="w-5 h-5" />
           </button>
-          <button onClick={() => imageRef.current.click()}
-            className="p-2 text-white/40 hover:text-white/70 hover:bg-white/10 rounded-xl transition-all">
+          <button onClick={() => imageRef.current.click()} className="p-2 text-white/40 hover:text-white/70 hover:bg-white/10 rounded-xl transition-all">
             <FiImage className="w-5 h-5" />
           </button>
-          <button onClick={() => fileRef.current.click()}
-            className="p-2 text-white/40 hover:text-white/70 hover:bg-white/10 rounded-xl transition-all">
+          <button onClick={() => fileRef.current.click()} className="p-2 text-white/40 hover:text-white/70 hover:bg-white/10 rounded-xl transition-all">
             <FiFile className="w-5 h-5" />
           </button>
-          <button onClick={handlePayment}
-            className="p-2 text-white/40 hover:text-white/70 hover:bg-white/10 rounded-xl transition-all">
+          <button onClick={handlePayment} className="p-2 text-white/40 hover:text-white/70 hover:bg-white/10 rounded-xl transition-all">
             <MdOutlinePayment className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Emoji button — mobile only (inline, not in tray) */}
         <button
           onClick={() => { setShowEmoji(!showEmoji); setShowActions(false); }}
           className={`sm:hidden p-2.5 rounded-xl transition-all shrink-0 ${showEmoji ? "text-primary-400 bg-primary-500/20" : "text-white/50 bg-white/8 hover:bg-white/15"}`}
@@ -238,21 +211,19 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
           <FiSmile className="w-5 h-5" />
         </button>
 
-        {/* Textarea */}
         <div className="flex-1 bg-dark-100 border border-white/10 rounded-2xl flex items-center focus-within:border-primary-500/40 transition-colors min-w-0">
           <textarea
             ref={inputRef}
             value={text}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            placeholder={`${roomName || "Room"} mein message...`}
+            placeholder={`Message ${roomName || "Room"}...`}
             rows={1}
             className="flex-1 bg-transparent text-white placeholder-white/25 text-sm px-3 sm:px-4 py-2.5 sm:py-3 outline-none resize-none max-h-28 leading-relaxed min-w-0"
             style={{ scrollbarWidth: "none" }}
           />
         </div>
 
-        {/* Send / Mic */}
         {text.trim() ? (
           <button onClick={handleSend}
             className="p-2.5 bg-primary-600 hover:bg-primary-700 rounded-xl text-white shadow-lg shadow-primary-600/20 active:scale-95 shrink-0 transition-all">
@@ -271,9 +242,8 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
         )}
       </div>
 
-      {/* Hint — desktop only */}
       <p className="hidden sm:block text-center text-white/15 text-xs mt-2">
-        Enter bhejo • Shift+Enter naya line • Mic hold karo voice ke liye
+        Enter to send • Shift+Enter for new line • Hold Mic for voice
       </p>
     </div>
   );

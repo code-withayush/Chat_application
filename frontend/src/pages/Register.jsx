@@ -21,17 +21,17 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.password)
-      return toast.error("Naam, email aur password zaroori hai");
+      return toast.error("Name, email and password are required");
     if (form.password.length < 6)
-      return toast.error("Password kam se kam 6 characters ka hona chahiye");
+      return toast.error("Password must be at least 6 characters");
 
     setLoading(true);
     try {
       await register(form.name, form.email, form.password, form.bio);
-      toast.success("Account ban gaya! Welcome 🎉");
+      toast.success("Account created! Welcome 🎉");
       navigate("/");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Register nahi hua");
+      toast.error(err.response?.data?.message || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -49,11 +49,11 @@ export default function Register() {
             💬
           </div>
           <h1 className="text-3xl font-bold text-white">ChatApp</h1>
-          <p className="text-white/50 mt-1">Naya account banao 🚀</p>
+          <p className="text-white/50 mt-1">Create a new account 🚀</p>
         </div>
 
         <div className="glass-card p-8">
-          <h2 className="text-xl font-semibold text-white mb-6">Register Karo</h2>
+          <h2 className="text-xl font-semibold text-white mb-6">Register</h2>
 
           {/* Avatar preview */}
           <div className="flex items-center gap-4 mb-6 p-4 bg-white/5 rounded-xl">
@@ -64,7 +64,7 @@ export default function Register() {
               {form.name ? form.name[0].toUpperCase() : "?"}
             </div>
             <div className="flex-1">
-              <p className="text-white/70 text-sm mb-2">Avatar color chunno:</p>
+              <p className="text-white/70 text-sm mb-2">Choose avatar color:</p>
               <div className="flex gap-2 flex-wrap">
                 {AVATAR_COLORS.map((color) => (
                   <button
@@ -89,7 +89,7 @@ export default function Register() {
               <input
                 name="name"
                 type="text"
-                placeholder="Apna naam"
+                placeholder="Your name"
                 value={form.name}
                 onChange={handleChange}
                 className="input-field pl-11"
@@ -122,7 +122,7 @@ export default function Register() {
 
             <textarea
               name="bio"
-              placeholder="Apne baare mein kuch likho (optional)"
+              placeholder="Tell us a little about yourself (optional)"
               value={form.bio}
               onChange={handleChange}
               rows={2}
@@ -139,16 +139,16 @@ export default function Register() {
               ) : (
                 <>
                   <FiUserPlus className="w-4 h-4" />
-                  Account Banao
+                  Create Account
                 </>
               )}
             </button>
           </form>
 
           <p className="text-center text-white/40 text-sm mt-6">
-            Pehle se account hai?{" "}
+            Already have an account?{" "}
             <Link to="/login" className="text-primary-400 hover:text-primary-300 font-medium">
-              Login Karo
+              Log In
             </Link>
           </p>
         </div>

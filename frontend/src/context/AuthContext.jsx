@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
-    const { data } = await API.post("/auth/login", { email, password }); // /api already in baseURL
+    const { data } = await API.post("/auth/login", { email, password });
     setUser(data);
     localStorage.setItem("chatUser", JSON.stringify(data));
     return data;
@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    try { await API.post("/auth/logout"); } catch {} // ✅ Fix: /api already in baseURL
+    try { await API.post("/auth/logout"); } catch {}
     setUser(null);
     localStorage.removeItem("chatUser");
   };

@@ -21,13 +21,12 @@ function ProfileModal({ user, isOnline, onClose }) {
   const lastSeenText = isOnline
     ? "Active now"
     : user.lastSeen
-    ? new Date(user.lastSeen).toLocaleString("en-IN", {
+    ? new Date(user.lastSeen).toLocaleString("en-US", {
         day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
       })
     : "—";
 
   return (
-    /* Bottom sheet on mobile, centered modal on sm+ */
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={onClose}
@@ -37,21 +36,17 @@ function ProfileModal({ user, isOnline, onClose }) {
         style={{ background: "#1a1a2e" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close */}
         <button onClick={onClose} className="absolute top-3 right-3 z-10 text-white/40 hover:text-white p-1">
           <FiX className="w-5 h-5" />
         </button>
 
-        {/* Drag handle — mobile only */}
         <div className="flex justify-center pt-3 pb-1 sm:hidden">
           <div className="w-10 h-1 rounded-full bg-white/20" />
         </div>
 
-        {/* Banner */}
         <div className="h-24" style={{ background: "linear-gradient(135deg, #7b2ff7, #9b59f5)" }} />
 
         <div className="px-5 pb-6 max-h-[70vh] overflow-y-auto" style={{ marginTop: "-40px" }}>
-          {/* Avatar */}
           <div className="mb-3 relative inline-block">
             <div
               className="w-20 h-20 rounded-full border-4 flex items-center justify-center text-white text-3xl font-bold"
@@ -65,7 +60,6 @@ function ProfileModal({ user, isOnline, onClose }) {
             />
           </div>
 
-          {/* Name */}
           <div className="mb-4">
             <h2 className="text-white text-xl font-bold">{user.name}</h2>
             <p className="text-sm flex items-center gap-1.5 mt-0.5" style={{ color: isOnline ? "#22c55e" : "#6b7280" }}>
@@ -74,13 +68,12 @@ function ProfileModal({ user, isOnline, onClose }) {
             </p>
           </div>
 
-          {/* Info rows */}
           <div className="flex flex-col gap-2 mb-4">
             {[
-              { icon: <FiMessageSquare className="w-4 h-4" />, label: "Bio",          value: user.bio || "Koi bio nahi", iconBg: "#352d6a", iconColor: "#9b7ff0" },
-              { icon: <FiMail className="w-4 h-4" />,          label: "Email",        value: user.email,                  iconBg: "#2a354a", iconColor: "#6aadee" },
-              { icon: <FiClock className="w-4 h-4" />,         label: "Last seen",    value: lastSeenText,               iconBg: "#1e3a2a", iconColor: "#22c55e", valueColor: isOnline ? "#22c55e" : "#e0e0f0" },
-              { icon: <FiUserCheck className="w-4 h-4" />,     label: "Member since", value: memberSince,                iconBg: "#2a3050", iconColor: "#7baef0" },
+              { icon: <FiMessageSquare className="w-4 h-4" />, label: "Bio",          value: user.bio || "No bio",         iconBg: "#352d6a", iconColor: "#9b7ff0" },
+              { icon: <FiMail className="w-4 h-4" />,          label: "Email",        value: user.email,                   iconBg: "#2a354a", iconColor: "#6aadee" },
+              { icon: <FiClock className="w-4 h-4" />,         label: "Last seen",    value: lastSeenText,                 iconBg: "#1e3a2a", iconColor: "#22c55e", valueColor: isOnline ? "#22c55e" : "#e0e0f0" },
+              { icon: <FiUserCheck className="w-4 h-4" />,     label: "Member since", value: memberSince,                  iconBg: "#2a3050", iconColor: "#7baef0" },
             ].map(({ icon, label, value, iconBg, iconColor, valueColor }) => (
               <div key={label} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#252540" }}>
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -100,7 +93,7 @@ function ProfileModal({ user, isOnline, onClose }) {
             className="w-full py-3.5 rounded-2xl text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all"
             style={{ background: "linear-gradient(135deg, #7b2ff7, #9b59f5)" }}
           >
-            <FiMessageSquare className="w-4 h-4" /> Message bhejo
+            <FiMessageSquare className="w-4 h-4" /> Send Message
           </button>
         </div>
       </div>
@@ -175,10 +168,10 @@ function CallModal({ callType, otherUser, socket, targetUserId, onEnd, isIncomin
     socket.emit("call:ended", { targetUserId });
   };
 
-  const endCall    = () => { cleanup(); onEnd(); };
-  const toggleMute = () => { const t = localStreamRef.current?.getAudioTracks()[0]; if (t) { t.enabled = !t.enabled; setMuted(!muted); } };
-  const toggleVideo= () => { const t = localStreamRef.current?.getVideoTracks()[0]; if (t) { t.enabled = !t.enabled; setVideoOff(!videoOff); } };
-  const acceptCall = () => { setStatus("connecting"); socket.emit("call:accepted", { callerId: targetUserId }); };
+  const endCall     = () => { cleanup(); onEnd(); };
+  const toggleMute  = () => { const t = localStreamRef.current?.getAudioTracks()[0]; if (t) { t.enabled = !t.enabled; setMuted(!muted); } };
+  const toggleVideo = () => { const t = localStreamRef.current?.getVideoTracks()[0]; if (t) { t.enabled = !t.enabled; setVideoOff(!videoOff); } };
+  const acceptCall  = () => { setStatus("connecting"); socket.emit("call:accepted", { callerId: targetUserId }); };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center gap-4 px-4">
@@ -285,20 +278,20 @@ function renderMessageContent(text) {
 
 // ── Main ChatWindow ─────────────────────────────────────────────
 export default function ChatWindow({ room, onBack }) {
-  const { user }           = useAuth();
+  const { user }                = useAuth();
   const { socket, onlineUsers } = useSocket();
-  const [messages,     setMessages]     = useState([]);
-  const [loading,      setLoading]      = useState(false);
-  const [typingUsers,  setTypingUsers]  = useState([]);
-  const [replyTo,      setReplyTo]      = useState(null);
-  const [showProfile,  setShowProfile]  = useState(false);
-  const [profileUser,  setProfileUser]  = useState(null);
-  const [showMenu,     setShowMenu]     = useState(false);
-  const [callState,    setCallState]    = useState(null);
+  const [messages,    setMessages]    = useState([]);
+  const [loading,     setLoading]     = useState(false);
+  const [typingUsers, setTypingUsers] = useState([]);
+  const [replyTo,     setReplyTo]     = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [profileUser, setProfileUser] = useState(null);
+  const [showMenu,    setShowMenu]    = useState(false);
+  const [callState,   setCallState]   = useState(null);
   const bottomRef = useRef(null);
 
-  const isDM        = room?.isDirect;
-  const otherMember = isDM ? room?.members?.find((m) => m._id !== user?._id) : null;
+  const isDM          = room?.isDirect;
+  const otherMember   = isDM ? room?.members?.find((m) => m._id !== user?._id) : null;
   const otherIsOnline = otherMember ? onlineUsers.includes(otherMember._id) : false;
 
   const fetchMessages = useCallback(async () => {
@@ -334,7 +327,7 @@ export default function ChatWindow({ room, onBack }) {
       }
     });
     socket.on("message:deleted", ({ messageId }) => {
-      setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, isDeleted: true, text: "Yeh message delete ho gaya" } : m));
+      setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, isDeleted: true, text: "This message was deleted" } : m));
     });
     socket.on("message:reacted", (updated) => {
       setMessages((prev) => prev.map((m) => m._id === updated._id ? updated : m));
@@ -347,10 +340,10 @@ export default function ChatWindow({ room, onBack }) {
       if (roomId === room._id) setTypingUsers((prev) => prev.filter((u) => u.userId !== userId));
     });
     socket.on("call:incoming", ({ callerId, callerName, callType }) => {
-      toast(`📞 ${callerName} call kar raha hai!`, { duration: 5000 });
+      toast(`📞 ${callerName} is calling you!`, { duration: 5000 });
       setCallState({ type: callType, targetUserId: callerId, otherUser: { name: callerName }, isIncoming: true });
     });
-    socket.on("call:rejected", () => { toast.error("Call reject ho gaya"); setCallState(null); });
+    socket.on("call:rejected", () => { toast.error("Call was rejected"); setCallState(null); });
 
     return () => {
       ["message:new","message:deleted","message:reacted","typing:start","typing:stop","call:incoming","call:rejected"]
@@ -367,35 +360,34 @@ export default function ChatWindow({ room, onBack }) {
     setShowProfile(true);
   };
 
-  const sendMessage    = (text) => { if (!socket || !room || !text.trim()) return; socket.emit("message:send", { roomId: room._id, text, replyTo: replyTo?._id || null }); setReplyTo(null); };
-  const handleDelete   = (id)   => socket?.emit("message:delete", { messageId: id, roomId: room._id });
-  const handleReact    = (id, e) => socket?.emit("message:react",  { messageId: id, emoji: e, roomId: room._id });
-  const handleTyping   = (isTyping) => socket?.emit(isTyping ? "typing:start" : "typing:stop", { roomId: room._id });
+  const sendMessage  = (text) => { if (!socket || !room || !text.trim()) return; socket.emit("message:send", { roomId: room._id, text, replyTo: replyTo?._id || null }); setReplyTo(null); };
+  const handleDelete = (id)   => socket?.emit("message:delete", { messageId: id, roomId: room._id });
+  const handleReact  = (id, e) => socket?.emit("message:react",  { messageId: id, emoji: e, roomId: room._id });
+  const handleTyping = (isTyping) => socket?.emit(isTyping ? "typing:start" : "typing:stop", { roomId: room._id });
 
   const handleClearChat = async () => {
-    if (!window.confirm("Sari chat delete karna chahte ho? Wapas nahi aayegi!")) return;
+    if (!window.confirm("Are you sure you want to delete all messages? This cannot be undone!")) return;
     try {
       await API.delete(`/messages/clear/${room._id}`);
       setMessages([]);
       setShowMenu(false);
-      toast.success("Chat clear ho gaya! 🗑️");
-    } catch { toast.error("Clear nahi hua"); }
+      toast.success("Chat cleared! 🗑️");
+    } catch { toast.error("Could not clear chat"); }
   };
 
   const startCall = (type) => {
-    if (!isDM || !otherMember) return toast.error("Sirf DM mein call kar sakte ho");
+    if (!isDM || !otherMember) return toast.error("You can only call in DMs");
     setCallState({ type, targetUserId: otherMember._id, otherUser: otherMember, isIncoming: false });
     socket?.emit("call:initiate", { targetUserId: otherMember._id, callType: type, roomId: room._id, callerName: user?.name });
   };
 
-  // ── Empty state ─────────────────────────────────────────────
   if (!room) {
     return (
       <div className="flex-1 flex items-center justify-center bg-dark-300 h-full">
         <div className="text-center px-6">
           <div className="text-6xl sm:text-7xl mb-5">💬</div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">ChatApp mein Swagat!</h2>
-          <p className="text-white/40 text-sm sm:text-base">Koi room ya friend chunno baat karne ke liye 🚀</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Welcome to ChatApp!</h2>
+          <p className="text-white/40 text-sm sm:text-base">Select a room or friend to start chatting 🚀</p>
         </div>
       </div>
     );
@@ -404,17 +396,14 @@ export default function ChatWindow({ room, onBack }) {
   return (
     <div className="flex-1 flex flex-col h-full bg-dark-300 min-w-0" onClick={() => setShowMenu(false)}>
 
-      {/* ══ HEADER ══════════════════════════════════════════════ */}
+      {/* ══ HEADER ══ */}
       <div className="flex items-center gap-2 px-3 sm:px-4 py-3 bg-dark-200 border-b border-white/5 shrink-0">
-
-        {/* Back button — mobile only */}
         {onBack && (
           <button onClick={onBack} className="lg:hidden p-2 -ml-1 rounded-xl hover:bg-white/10 transition-colors shrink-0">
             <FiChevronLeft className="w-5 h-5 text-white" />
           </button>
         )}
 
-        {/* Avatar — clickable for DM profile */}
         <button onClick={openProfile} className="shrink-0" disabled={!isDM}>
           {isDM ? (
             <div className="relative">
@@ -429,7 +418,6 @@ export default function ChatWindow({ room, onBack }) {
           )}
         </button>
 
-        {/* Name + status */}
         <div className="flex-1 min-w-0 cursor-pointer" onClick={openProfile}>
           <p className="font-semibold text-white text-sm truncate leading-tight">
             {isDM ? otherMember?.name || "User" : room.name}
@@ -441,7 +429,6 @@ export default function ChatWindow({ room, onBack }) {
           </p>
         </div>
 
-        {/* Right actions */}
         <div className="flex items-center gap-0.5 shrink-0">
           {isDM && (
             <>
@@ -453,16 +440,12 @@ export default function ChatWindow({ room, onBack }) {
               </button>
             </>
           )}
-
-          {/* Member count — desktop only */}
           {!isDM && (
             <div className="hidden sm:flex items-center gap-1 px-2">
               <FiUsers className="w-3.5 h-3.5 text-white/30" />
               <span className="text-xs text-white/30">{room.members?.length || 0}</span>
             </div>
           )}
-
-          {/* Three-dot menu */}
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
@@ -491,7 +474,7 @@ export default function ChatWindow({ room, onBack }) {
         </div>
       </div>
 
-      {/* ══ MESSAGES ════════════════════════════════════════════ */}
+      {/* ══ MESSAGES ══ */}
       <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-3 sm:py-4 space-y-1">
         {loading ? (
           <div className="flex justify-center py-12">
@@ -501,7 +484,7 @@ export default function ChatWindow({ room, onBack }) {
           <div className="flex flex-col items-center justify-center h-full text-center py-12 px-4">
             <span className="text-4xl sm:text-5xl mb-4">{room.icon || "👋"}</span>
             <p className="text-white/40 text-sm sm:text-base">
-              {isDM ? `${otherMember?.name} ko pehla message bhejo!` : `#${room.name} mein pehla message bhejo!`}
+              {isDM ? `Send your first message to ${otherMember?.name}!` : `Send the first message in #${room.name}!`}
             </p>
           </div>
         ) : (
@@ -532,14 +515,14 @@ export default function ChatWindow({ room, onBack }) {
               ))}
             </div>
             <span className="text-xs text-white/30 truncate">
-              {typingUsers.map((u) => u.userName).join(", ")} likh raha hai...
+              {typingUsers.map((u) => u.userName).join(", ")} is typing...
             </span>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
 
-      {/* ══ INPUT ═══════════════════════════════════════════════ */}
+      {/* ══ INPUT ══ */}
       <MessageInput
         onSend={sendMessage}
         onTyping={handleTyping}
@@ -548,7 +531,7 @@ export default function ChatWindow({ room, onBack }) {
         roomName={isDM ? otherMember?.name : room.name}
       />
 
-      {/* ══ MODALS ══════════════════════════════════════════════ */}
+      {/* ══ MODALS ══ */}
       {showProfile && isDM && (
         <ProfileModal user={profileUser} isOnline={otherIsOnline} onClose={() => { setShowProfile(false); setProfileUser(null); }} />
       )}

@@ -46,5 +46,5 @@ socketHandler(io);
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server chal raha hai port ${PORT} par`);
+  console.log(`🚀 Server is running on port ${PORT}`);
 });

@@ -9,8 +9,8 @@ export default function Chat() {
     <div className="flex h-screen bg-dark-300 overflow-hidden">
 
       {/* ── SIDEBAR ──
-          Mobile : room nahi select = full screen | room select = hide
-          Desktop: hamesha side mein
+          Mobile : no room selected = full screen | room selected = hide
+          Desktop: always on the side
       */}
       <div className={`h-full w-full lg:w-72 shrink-0 flex flex-col ${activeRoom ? "hidden lg:flex" : "flex"}`}>
         <Sidebar
@@ -20,8 +20,8 @@ export default function Chat() {
       </div>
 
       {/* ── CHAT WINDOW ──
-          Mobile : sirf jab room select ho
-          Desktop: hamesha
+          Mobile : only when a room is selected
+          Desktop: always visible
       */}
       <div className={`flex-1 flex flex-col min-w-0 h-full ${activeRoom ? "flex" : "hidden lg:flex"}`}>
         <ChatWindow

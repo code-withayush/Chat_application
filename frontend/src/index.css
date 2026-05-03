@@ -2,6 +2,38 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== LIGHT THEME CSS VARIABLES ===== */
+[data-theme="light"] {
+  --bg-primary: #f0f2f5;
+  --bg-secondary: #ffffff;
+  --bg-sidebar: #f7f8fc;
+  --bg-chat: #e5ddd5;
+  --bg-message-sent: #dcf8c6;
+  --bg-message-received: #ffffff;
+  --text-primary: #111111;
+  --text-secondary: #555555;
+  --border-color: #d1d5db;
+  --input-bg: #ffffff;
+  --hover-bg: #e8eaed;
+  --icon-color: #555555;
+}
+
+/* ===== DARK THEME CSS VARIABLES ===== */
+[data-theme="dark"] {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-sidebar: #0f3460;
+  --bg-chat: #1a1a2e;
+  --bg-message-sent: #005c4b;
+  --bg-message-received: #1f2c34;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --border-color: #334155;
+  --input-bg: #2d3748;
+  --hover-bg: #2d3748;
+  --icon-color: #94a3b8;
+}
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -13,61 +45,149 @@
     @apply bg-dark-300 text-white font-sans antialiased;
     height: 100vh;
     overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  ::-webkit-scrollbar {
-    width: 4px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-dark-200;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-primary-700 rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-primary-500;
-  }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { @apply bg-dark-200; }
+  ::-webkit-scrollbar-thumb { @apply bg-primary-700 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-primary-500; }
 }
 
 @layer components {
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2.5 px-5 rounded-xl transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
   }
-
   .btn-ghost {
     @apply bg-transparent hover:bg-white/10 text-white/70 hover:text-white font-medium py-2 px-4 rounded-xl transition-all duration-200;
   }
-
   .input-field {
     @apply bg-dark-200 border border-white/10 focus:border-primary-500 text-white placeholder-white/30 rounded-xl px-4 py-3 w-full outline-none transition-all duration-200 focus:ring-2 focus:ring-primary-500/20;
   }
-
   .glass-card {
     @apply bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl;
   }
-
   .message-bubble-mine {
     @apply bg-primary-600 text-white rounded-2xl rounded-br-sm px-4 py-2.5 max-w-xs lg:max-w-md break-words;
   }
-
   .message-bubble-other {
     @apply bg-dark-100 text-white/90 rounded-2xl rounded-bl-sm px-4 py-2.5 max-w-xs lg:max-w-md break-words border border-white/5;
   }
-
   .sidebar-item {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 hover:bg-white/10;
   }
-
   .sidebar-item-active {
     @apply bg-primary-600/30 border border-primary-500/30 text-white;
   }
-
   .online-dot {
     @apply w-2.5 h-2.5 bg-green-400 rounded-full ring-2 ring-dark-300;
   }
 }
 
-/* Typing animation */
+/* ============================================
+   LIGHT THEME - COMPLETE OVERRIDES
+   ============================================ */
+
+/* ── Body & Root ── */
+[data-theme="light"] body,
+[data-theme="light"] #root {
+  background-color: #f0f2f5 !important;
+  color: #111111 !important;
+}
+
+/* ── Dark bg classes ── */
+[data-theme="light"] .bg-dark-100 { background-color: #ffffff !important; }
+[data-theme="light"] .bg-dark-200 { background-color: #f0f2f5 !important; }
+[data-theme="light"] .bg-dark-300 { background-color: #e8eaed !important; }
+
+/* ── ALL inline style modals ── */
+[data-theme="light"] div[style*="111827"] { background: #ffffff !important; }
+[data-theme="light"] div[style*="0f172a"] { background: #ffffff !important; }
+[data-theme="light"] div[style*="1e293b"] { background: #ffffff !important; }
+
+/* ── Text colors ── */
+[data-theme="light"] .text-white        { color: #111111 !important; }
+[data-theme="light"] .text-white\/90    { color: #1a1a1a !important; }
+[data-theme="light"] .text-white\/80    { color: #222222 !important; }
+[data-theme="light"] .text-white\/70    { color: #333333 !important; }
+[data-theme="light"] .text-white\/60    { color: #555555 !important; }
+[data-theme="light"] .text-white\/50    { color: #666666 !important; }
+[data-theme="light"] .text-white\/40    { color: #777777 !important; }
+[data-theme="light"] .text-white\/35    { color: #555555 !important; }
+[data-theme="light"] .text-white\/30    { color: #888888 !important; }
+[data-theme="light"] .text-white\/25    { color: #999999 !important; }
+[data-theme="light"] .text-white\/20    { color: #aaaaaa !important; }
+[data-theme="light"] .text-white\/15    { color: #bbbbbb !important; }
+[data-theme="light"] .text-white\/10    { color: #cccccc !important; }
+
+/* ── Tabs: active + inactive ── */
+[data-theme="light"] .bg-primary-600\/20 { background-color: rgba(124,58,237,0.12) !important; }
+[data-theme="light"] .text-primary-400   { color: #7C3AED !important; }
+[data-theme="light"] .hover\:text-white\/60:hover { color: #333333 !important; }
+
+/* ── White bg with opacity ── */
+[data-theme="light"] .bg-white\/5        { background-color: rgba(0,0,0,0.04) !important; }
+[data-theme="light"] .bg-white\/8        { background-color: rgba(0,0,0,0.06) !important; }
+[data-theme="light"] .bg-white\/10       { background-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .bg-white\/20       { background-color: rgba(0,0,0,0.12) !important; }
+
+/* ── Hover states ── */
+[data-theme="light"] .hover\:bg-white\/5:hover   { background-color: rgba(0,0,0,0.05) !important; }
+[data-theme="light"] .hover\:bg-white\/10:hover  { background-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .hover\:bg-white\/20:hover  { background-color: rgba(0,0,0,0.12) !important; }
+[data-theme="light"] .hover\:bg-red-500\/10:hover { background-color: rgba(239,68,68,0.1) !important; }
+
+/* ── Borders ── */
+[data-theme="light"] .border-white\/5    { border-color: rgba(0,0,0,0.08) !important; }
+[data-theme="light"] .border-white\/8    { border-color: rgba(0,0,0,0.10) !important; }
+[data-theme="light"] .border-white\/10   { border-color: rgba(0,0,0,0.12) !important; }
+[data-theme="light"] .border-white\/20   { border-color: rgba(0,0,0,0.18) !important; }
+[data-theme="light"] .border-t           { border-color: rgba(0,0,0,0.10) !important; }
+[data-theme="light"] .border-b           { border-color: rgba(0,0,0,0.10) !important; }
+
+/* ── Inputs & Textareas ── */
+[data-theme="light"] input,
+[data-theme="light"] textarea {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  border-color: #d1d5db !important;
+}
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder { color: #aaaaaa !important; }
+[data-theme="light"] .input-field {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  border-color: #d1d5db !important;
+}
+
+/* ── Message bubbles ── */
+[data-theme="light"] .message-bubble-mine {
+  background-color: #dcf8c6 !important;
+  color: #111111 !important;
+}
+[data-theme="light"] .message-bubble-other {
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  border-color: #e5e7eb !important;
+}
+
+/* ── Dropdown dot menu ── */
+[data-theme="light"] .bg-dark-100.border {
+  background-color: #ffffff !important;
+  border-color: rgba(0,0,0,0.1) !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12) !important;
+}
+
+/* ── Active room highlight ── */
+[data-theme="light"] .border-primary-500\/20 { border-color: rgba(124,58,237,0.25) !important; }
+
+/* ── Scrollbar light ── */
+[data-theme="light"] ::-webkit-scrollbar-track { background: #f0f2f5 !important; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: #c1c1c1 !important; }
+
+/* ============================================
+   TYPING ANIMATION
+   ============================================ */
 .typing-dot {
   animation: bounceDot 1.4s infinite ease-in-out;
 }
@@ -76,5 +196,5 @@
 
 @keyframes bounceDot {
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-  40% { transform: scale(1); opacity: 1; }
+  40%           { transform: scale(1);   opacity: 1;   }
 }

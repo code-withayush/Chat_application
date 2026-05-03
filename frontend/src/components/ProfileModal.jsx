@@ -86,7 +86,7 @@ export default function ProfileModal({ user, isOnline, onClose, onPrev, onNext }
               iconBg="#352d6a"
               iconColor="#9b7ff0"
               label="Bio"
-              value={user.bio || "Koi bio nahi"}
+              value={user.bio || "No bio"}
             />
             <InfoRow
               icon={<FiMail />}
@@ -118,7 +118,7 @@ export default function ProfileModal({ user, isOnline, onClose, onPrev, onNext }
             style={{ background: "linear-gradient(135deg, #7b2ff7, #9b59f5)" }}
           >
             <FiMessageSquare className="w-4 h-4" />
-            Message bhejo
+            Send Message
           </button>
         </div>
       </div>

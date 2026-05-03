@@ -15,7 +15,7 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    // ✅ Fix: env variable use karo, replace() fragile tha
+    // ✅ Fix: use env variable, replace() was fragile
     const s = io(import.meta.env.VITE_API_URL, {
       auth: { token: user.token },
       transports: ["websocket", "polling"],

@@ -5,7 +5,7 @@ const { protect } = require("../middleware/authMiddleware");
 
 router.post("/", protect, upload.single("file"), (req, res) => {
   if (!req.file) return res.status(400).json({ message: "File nahi mili" });
-  const fileUrl = `${process.env.SERVER_URL}/uploads/${req.file.filename}`;
+  const fileUrl = `${process.env.SERVER_URL || "http://localhost:5000"}/uploads/${req.file.filename}`;
   res.json({
     url: fileUrl,
     name: req.file.originalname,

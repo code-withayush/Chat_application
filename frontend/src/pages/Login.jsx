@@ -13,14 +13,14 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) return toast.error("Sab fields bharo");
+    if (!email || !password) return toast.error("Please fill in all fields");
     setLoading(true);
     try {
       await login(email, password);
       toast.success("Welcome back! 🎉");
       navigate("/");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Login nahi hua");
+      toast.error(err.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -40,12 +40,12 @@ export default function Login() {
             💬
           </div>
           <h1 className="text-3xl font-bold text-white">ChatApp</h1>
-          <p className="text-white/50 mt-1">Apno se baat karo 💫</p>
+          <p className="text-white/50 mt-1">Connect with your people 💫</p>
         </div>
 
         {/* Card */}
         <div className="glass-card p-8">
-          <h2 className="text-xl font-semibold text-white mb-6">Login Karo</h2>
+          <h2 className="text-xl font-semibold text-white mb-6">Log In</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="relative">
@@ -82,16 +82,16 @@ export default function Login() {
               ) : (
                 <>
                   <FiLogIn className="w-4 h-4" />
-                  Login Karo
+                  Log In
                 </>
               )}
             </button>
           </form>
 
           <p className="text-center text-white/40 text-sm mt-6">
-            Naya account?{" "}
+            Don't have an account?{" "}
             <Link to="/register" className="text-primary-400 hover:text-primary-300 font-medium">
-              Register Karo
+              Register
             </Link>
           </p>
         </div>
