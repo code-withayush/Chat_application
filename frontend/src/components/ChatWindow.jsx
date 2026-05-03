@@ -5,7 +5,7 @@ import API from "../utils/api";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import { FiUsers, FiPhone, FiVideo, FiMoreVertical, FiTrash2, FiX,
-  FiMessageSquare, FiMail, FiClock, FiUserCheck } from "react-icons/fi";
+  FiMessageSquare, FiMail, FiClock, FiUserCheck, FiArrowLeft } from "react-icons/fi";
 import toast from "react-hot-toast";
 
 // ── Profile Modal ──────────────────────────────────────────────
@@ -25,27 +25,33 @@ function ProfileModal({ user, isOnline, onClose }) {
     : "—";
 
   return (
+    /* Full-screen on mobile, centered modal on md+ */
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-80 rounded-2xl overflow-hidden shadow-2xl animate-fade-in"
+        className="relative w-full sm:w-80 rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto"
         style={{ background: "#1a1a2e" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 text-white/40 hover:text-white transition-colors"
+          className="absolute top-3 right-3 z-10 text-white/40 hover:text-white transition-colors p-1"
         >
           <FiX className="w-5 h-5" />
         </button>
 
-        {/* Purple banner */}
-        <div className="h-24" style={{ background: "linear-gradient(135deg, #7b2ff7, #9b59f5)" }} />
+        {/* Drag handle — mobile only */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
 
-        <div className="px-5 pb-5" style={{ marginTop: "-40px" }}>
+        {/* Purple banner */}
+        <div className="h-24 sm:h-24" style={{ background: "linear-gradient(135deg, #7b2ff7, #9b59f5)" }} />
+
+        <div className="px-5 pb-6" style={{ marginTop: "-40px" }}>
           {/* Avatar */}
           <div className="mb-3">
             <div className="relative inline-block">
@@ -69,68 +75,31 @@ function ProfileModal({ user, isOnline, onClose }) {
           <div className="mb-4">
             <h2 className="text-white text-xl font-bold leading-tight">{user.name}</h2>
             <p className="text-sm flex items-center gap-1.5 mt-0.5" style={{ color: isOnline ? "#22c55e" : "#6b7280" }}>
-              <span
-                className="w-2 h-2 rounded-full inline-block"
-                style={{ background: isOnline ? "#22c55e" : "#6b7280" }}
-              />
+              <span className="w-2 h-2 rounded-full inline-block" style={{ background: isOnline ? "#22c55e" : "#6b7280" }} />
               {isOnline ? "Online" : "Offline"}
             </p>
           </div>
 
           {/* Info rows */}
           <div className="flex flex-col gap-2 mb-4">
-            {/* Bio */}
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#252540" }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "#352d6a", color: "#9b7ff0" }}>
-                <FiMessageSquare className="w-4 h-4" />
+            {[
+              { icon: <FiMessageSquare className="w-4 h-4" />, label: "Bio", value: user.bio || "Koi bio nahi", bg: "#352d6a", color: "#9b7ff0", rowBg: "#252540" },
+              { icon: <FiMail className="w-4 h-4" />, label: "Email", value: user.email, bg: "#2a354a", color: "#6aadee", rowBg: "#252540" },
+              { icon: <FiClock className="w-4 h-4" />, label: "Last seen", value: lastSeenText, bg: "#1e3a2a", color: "#22c55e", rowBg: "#252540", valueColor: isOnline ? "#22c55e" : "#e0e0f0" },
+              { icon: <FiUserCheck className="w-4 h-4" />, label: "Member since", value: memberSince, bg: "#2a3050", color: "#7baef0", rowBg: "#252540" },
+            ].map(({ icon, label, value, bg, color, rowBg, valueColor }) => (
+              <div key={label} className="flex items-center gap-3 p-3 rounded-xl" style={{ background: rowBg }}>
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg, color }}>
+                  {icon}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs mb-0.5" style={{ color: "#888" }}>{label}</p>
+                  <p className="text-sm truncate" style={{ color: valueColor || "#e0e0f0" }}>{value}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs mb-0.5" style={{ color: "#888" }}>Bio</p>
-                <p className="text-sm truncate" style={{ color: "#e0e0f0" }}>{user.bio || "Koi bio nahi"}</p>
-              </div>
-            </div>
-
-            {/* Email */}
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#252540" }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "#2a354a", color: "#6aadee" }}>
-                <FiMail className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs mb-0.5" style={{ color: "#888" }}>Email</p>
-                <p className="text-sm truncate" style={{ color: "#e0e0f0" }}>{user.email}</p>
-              </div>
-            </div>
-
-            {/* Last seen */}
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#252540" }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "#1e3a2a", color: "#22c55e" }}>
-                <FiClock className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs mb-0.5" style={{ color: "#888" }}>Last seen</p>
-                <p className="text-sm truncate" style={{ color: isOnline ? "#22c55e" : "#e0e0f0" }}>
-                  {lastSeenText}
-                </p>
-              </div>
-            </div>
-
-            {/* Member since */}
-            <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "#252540" }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                style={{ background: "#2a3050", color: "#7baef0" }}>
-                <FiUserCheck className="w-4 h-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs mb-0.5" style={{ color: "#888" }}>Member since</p>
-                <p className="text-sm truncate" style={{ color: "#e0e0f0" }}>{memberSince}</p>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Message button */}
           <button
             onClick={onClose}
             className="w-full py-3.5 rounded-2xl text-white font-semibold text-base flex items-center justify-center gap-2 transition-opacity hover:opacity-90 active:scale-95"
@@ -233,19 +202,23 @@ function CallModal({ callType, otherUser, socket, targetUserId, onEnd, isIncomin
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center gap-6">
+    <div className="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center gap-4 px-4">
       {callType === "video" && (
-        <div className="relative w-full max-w-2xl h-96 bg-dark-200 rounded-2xl overflow-hidden">
+        <div className="relative w-full max-w-2xl h-64 sm:h-96 bg-dark-200 rounded-2xl overflow-hidden">
           <video ref={remoteVideoRef} autoPlay playsInline className="w-full h-full object-cover" />
-          <video ref={localVideoRef} autoPlay playsInline muted
-            className="absolute bottom-3 right-3 w-36 h-28 rounded-xl object-cover border-2 border-white/20 shadow-xl" />
+          <video
+            ref={localVideoRef} autoPlay playsInline muted
+            className="absolute bottom-3 right-3 w-24 h-20 sm:w-36 sm:h-28 rounded-xl object-cover border-2 border-white/20 shadow-xl"
+          />
         </div>
       )}
       {callType === "audio" && (
         <div className="flex flex-col items-center gap-4">
           <audio ref={remoteAudioRef} autoPlay />
-          <div className={`w-28 h-28 rounded-full flex items-center justify-center text-white text-5xl font-bold ${status === "connected" ? "ring-4 ring-green-400 ring-offset-4 ring-offset-black" : ""}`}
-            style={{ backgroundColor: otherUser?.avatarColor || "#7C3AED" }}>
+          <div
+            className={`w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center text-white text-4xl sm:text-5xl font-bold ${status === "connected" ? "ring-4 ring-green-400 ring-offset-4 ring-offset-black" : ""}`}
+            style={{ backgroundColor: otherUser?.avatarColor || "#7C3AED" }}
+          >
             {otherUser?.name?.[0]?.toUpperCase()}
           </div>
           <h2 className="text-white text-xl font-bold">{otherUser?.name}</h2>
@@ -254,41 +227,42 @@ function CallModal({ callType, otherUser, socket, targetUserId, onEnd, isIncomin
           </p>
         </div>
       )}
-      <div className="flex items-center gap-4 mt-4">
+
+      {/* Controls */}
+      <div className="flex items-center gap-3 sm:gap-4 mt-2">
         {status === "incoming" ? (
           <>
-            <div className="flex flex-col items-center gap-1">
-              <button onClick={acceptCall} className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center shadow-lg shadow-green-500/30 transition-all active:scale-95">
-                <span className="text-2xl">📞</span>
-              </button>
-              <span className="text-white/40 text-xs">Accept</span>
-            </div>
-            <div className="flex flex-col items-center gap-1">
-              <button onClick={endCall} className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg shadow-red-500/30 transition-all active:scale-95">
-                <span className="text-2xl">📵</span>
-              </button>
-              <span className="text-white/40 text-xs">Reject</span>
-            </div>
+            {[
+              { fn: acceptCall, bg: "bg-green-500 hover:bg-green-600 shadow-green-500/30", icon: "📞", label: "Accept" },
+              { fn: endCall, bg: "bg-red-500 hover:bg-red-600 shadow-red-500/30", icon: "📵", label: "Reject" },
+            ].map(({ fn, bg, icon, label }) => (
+              <div key={label} className="flex flex-col items-center gap-1">
+                <button onClick={fn} className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full ${bg} flex items-center justify-center shadow-lg transition-all active:scale-95`}>
+                  <span className="text-xl sm:text-2xl">{icon}</span>
+                </button>
+                <span className="text-white/40 text-xs">{label}</span>
+              </div>
+            ))}
           </>
         ) : (
           <>
             <div className="flex flex-col items-center gap-1">
-              <button onClick={toggleMute} className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${muted ? "bg-red-500" : "bg-white/10 hover:bg-white/20"}`}>
-                <span className="text-xl">{muted ? "🔇" : "🎤"}</span>
+              <button onClick={toggleMute} className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${muted ? "bg-red-500" : "bg-white/10 hover:bg-white/20"}`}>
+                <span className="text-lg sm:text-xl">{muted ? "🔇" : "🎤"}</span>
               </button>
               <span className="text-white/40 text-xs">{muted ? "Unmute" : "Mute"}</span>
             </div>
             {callType === "video" && (
               <div className="flex flex-col items-center gap-1">
-                <button onClick={toggleVideo} className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${videoOff ? "bg-red-500" : "bg-white/10 hover:bg-white/20"}`}>
-                  <span className="text-xl">{videoOff ? "📷" : "📹"}</span>
+                <button onClick={toggleVideo} className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all ${videoOff ? "bg-red-500" : "bg-white/10 hover:bg-white/20"}`}>
+                  <span className="text-lg sm:text-xl">{videoOff ? "📷" : "📹"}</span>
                 </button>
                 <span className="text-white/40 text-xs">{videoOff ? "Cam On" : "Cam Off"}</span>
               </div>
             )}
             <div className="flex flex-col items-center gap-1">
-              <button onClick={endCall} className="w-16 h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg shadow-red-500/30 transition-all active:scale-95">
-                <span className="text-2xl">📵</span>
+              <button onClick={endCall} className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center shadow-lg shadow-red-500/30 transition-all active:scale-95">
+                <span className="text-xl sm:text-2xl">📵</span>
               </button>
               <span className="text-white/40 text-xs">End</span>
             </div>
@@ -306,7 +280,7 @@ function renderMessageContent(text) {
     const url = text.slice(7, -8);
     return (
       <img src={url} alt="Shared image"
-        className="max-w-xs max-h-64 rounded-xl object-cover cursor-pointer hover:opacity-90 transition-opacity"
+        className="max-w-[220px] sm:max-w-xs max-h-64 rounded-xl object-cover cursor-pointer hover:opacity-90 transition-opacity"
         onClick={() => window.open(url, "_blank")} />
     );
   }
@@ -315,7 +289,7 @@ function renderMessageContent(text) {
     return (
       <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
         <span>🎙️</span>
-        <audio controls src={url} className="h-8 max-w-xs" style={{ filter: "invert(0.8)" }} />
+        <audio controls src={url} className="h-8 w-full max-w-[200px] sm:max-w-xs" style={{ filter: "invert(0.8)" }} />
       </div>
     );
   }
@@ -326,8 +300,8 @@ function renderMessageContent(text) {
       <a href={url} target="_blank" rel="noreferrer"
         className="flex items-center gap-2 bg-white/10 hover:bg-white/20 rounded-xl px-3 py-2 transition-colors group">
         <span className="text-2xl">📄</span>
-        <div>
-          <p className="text-white text-sm font-medium group-hover:underline">{name}</p>
+        <div className="min-w-0">
+          <p className="text-white text-sm font-medium group-hover:underline truncate max-w-[140px] sm:max-w-none">{name}</p>
           <p className="text-white/40 text-xs">Click to download</p>
         </div>
       </a>
@@ -337,7 +311,7 @@ function renderMessageContent(text) {
 }
 
 // ── Main ChatWindow ─────────────────────────────────────────────
-export default function ChatWindow({ room }) {
+export default function ChatWindow({ room, onBack }) {
   const { user } = useAuth();
   const { socket, onlineUsers } = useSocket();
   const [messages, setMessages] = useState([]);
@@ -345,7 +319,7 @@ export default function ChatWindow({ room }) {
   const [typingUsers, setTypingUsers] = useState([]);
   const [replyTo, setReplyTo] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
-  const [profileUser, setProfileUser] = useState(null);   // ✅ NEW
+  const [profileUser, setProfileUser] = useState(null);
   const [showMenu, setShowMenu] = useState(false);
   const [callState, setCallState] = useState(null);
   const bottomRef = useRef(null);
@@ -432,7 +406,6 @@ export default function ChatWindow({ room }) {
     };
   }, [socket, room?._id]);
 
-  // ✅ Fresh user data fetch karke profile open karo
   const openProfile = async () => {
     if (!isDM || !otherMember) return;
     try {
@@ -494,11 +467,11 @@ export default function ChatWindow({ room }) {
   if (!room) {
     return (
       <div className="flex-1 flex items-center justify-center bg-dark-300">
-        <div className="text-center animate-fade-in">
-          <div className="text-7xl mb-6">💬</div>
-          <h2 className="text-2xl font-bold text-white mb-2">ChatApp mein Swagat Hai!</h2>
-          <p className="text-white/40 mb-1">Left sidebar se koi room ya friend chunno</p>
-          <p className="text-white/20 text-sm">Baat shuru karo 🚀</p>
+        <div className="text-center animate-fade-in px-4">
+          <div className="text-6xl sm:text-7xl mb-6">💬</div>
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">ChatApp mein Swagat Hai!</h2>
+          <p className="text-white/40 mb-1 text-sm sm:text-base">Left sidebar se koi room ya friend chunno</p>
+          <p className="text-white/20 text-xs sm:text-sm">Baat shuru karo 🚀</p>
         </div>
       </div>
     );
@@ -512,76 +485,121 @@ export default function ChatWindow({ room }) {
     <div className="flex-1 flex flex-col h-full bg-dark-300 min-w-0" onClick={() => setShowMenu(false)}>
 
       {/* ── Header ── */}
-      <div className="flex items-center gap-3 px-5 py-3.5 bg-dark-200 border-b border-white/5 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 bg-dark-200 border-b border-white/5 shrink-0">
 
-        <button onClick={() => isDM && openProfile()} className="shrink-0"> {/* ✅ openProfile */}
+        {/* Back button — visible only on mobile (implement via parent prop) */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="sm:hidden p-2 -ml-1 hover:bg-white/10 rounded-xl transition-colors flex-shrink-0"
+          >
+            <FiArrowLeft className="w-5 h-5 text-white/70" />
+          </button>
+        )}
+
+        {/* Avatar */}
+        <button onClick={() => isDM && openProfile()} className="shrink-0">
           {isDM ? (
             <div className="relative">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm"
-                style={{ backgroundColor: otherMember?.avatarColor || "#7C3AED" }}>
+              <div
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                style={{ backgroundColor: otherMember?.avatarColor || "#7C3AED" }}
+              >
                 {otherMember?.name?.[0]?.toUpperCase() || "?"}
               </div>
-              <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-dark-200 ${otherIsOnline ? "bg-green-400" : "bg-gray-500"}`} />
+              <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border-2 border-dark-200 ${otherIsOnline ? "bg-green-400" : "bg-gray-500"}`} />
             </div>
           ) : (
-            <span className="text-2xl">{room.icon || "💬"}</span>
+            <span className="text-xl sm:text-2xl">{room.icon || "💬"}</span>
           )}
         </button>
 
-        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => isDM && openProfile()}> {/* ✅ openProfile */}
-          <p className="font-semibold text-white text-sm">
+        {/* Name + status */}
+        <div className="flex-1 min-w-0 cursor-pointer" onClick={() => isDM && openProfile()}>
+          <p className="font-semibold text-white text-sm truncate">
             {isDM ? otherMember?.name || "User" : room.name}
           </p>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-white/40 truncate">
             {isDM
               ? (typingUsers.length > 0 ? "✍️ typing..." : otherIsOnline ? "🟢 Online" : "⚫ Offline")
               : `${room.members?.length || 0} members`}
           </p>
         </div>
 
-        <div className="flex items-center gap-1">
+        {/* Action buttons */}
+        <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
           {isDM && (
             <>
-              <button onClick={() => startCall("audio")} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+              <button
+                onClick={() => startCall("audio")}
+                className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+              >
                 <FiPhone className="w-4 h-4 text-white/50 hover:text-white" />
               </button>
-              <button onClick={() => startCall("video")} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+              <button
+                onClick={() => startCall("video")}
+                className="p-2 hover:bg-white/10 rounded-xl transition-colors hidden xs:flex"
+              >
                 <FiVideo className="w-4 h-4 text-white/50 hover:text-white" />
               </button>
             </>
           )}
+
+          {/* Members count — hidden on smallest screens */}
+          <div className="hidden sm:flex items-center gap-1 ml-1">
+            <FiUsers className="w-4 h-4 text-white/30" />
+            <span className="text-xs text-white/30">{room.members?.length || 0}</span>
+          </div>
+
+          {/* Three-dot menu */}
           <div className="relative">
-            <button onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-              className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
+              className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+            >
               <FiMoreVertical className="w-4 h-4 text-white/50 hover:text-white" />
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-10 bg-dark-100 border border-white/10 rounded-xl shadow-2xl z-40 min-w-44 py-1 animate-fade-in"
-                onClick={(e) => e.stopPropagation()}>
-                <button onClick={handleClearChat}
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 transition-colors">
+              <div
+                className="absolute right-0 top-10 bg-dark-100 border border-white/10 rounded-xl shadow-2xl z-40 min-w-44 py-1 animate-fade-in"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Show member count in dropdown on mobile */}
+                <div className="sm:hidden flex items-center gap-2 px-4 py-2.5 text-sm text-white/40 border-b border-white/5">
+                  <FiUsers className="w-4 h-4" />
+                  <span>{room.members?.length || 0} members</span>
+                </div>
+                {/* Video call option on very small screens */}
+                {isDM && (
+                  <button
+                    onClick={() => { startCall("video"); setShowMenu(false); }}
+                    className="xs:hidden w-full flex items-center gap-2 px-4 py-2.5 text-sm text-white/70 hover:bg-white/5 transition-colors"
+                  >
+                    <FiVideo className="w-4 h-4" /> Video Call
+                  </button>
+                )}
+                <button
+                  onClick={handleClearChat}
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-white/5 transition-colors"
+                >
                   <FiTrash2 className="w-4 h-4" /> Clear Chat
                 </button>
               </div>
             )}
           </div>
-          <div className="flex items-center gap-1 ml-1">
-            <FiUsers className="w-4 h-4 text-white/30" />
-            <span className="text-xs text-white/30">{room.members?.length || 0}</span>
-          </div>
         </div>
       </div>
 
       {/* ── Messages ── */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+      <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-3 sm:py-4 space-y-1">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-12">
-            <span className="text-5xl mb-4">{room.icon || "👋"}</span>
-            <p className="text-white/40 font-medium">
+          <div className="flex flex-col items-center justify-center h-full text-center py-12 px-4">
+            <span className="text-4xl sm:text-5xl mb-4">{room.icon || "👋"}</span>
+            <p className="text-white/40 font-medium text-sm sm:text-base">
               {isDM ? `${otherMember?.name} ko pehla message bhejo!` : `#${room.name} mein pehla message bhejo!`}
             </p>
           </div>
@@ -604,17 +622,19 @@ export default function ChatWindow({ room }) {
             );
           })
         )}
+
+        {/* Typing indicator */}
         {typingUsers.length > 0 && (
-          <div className="flex items-center gap-3 px-2 py-1 animate-fade-in">
-            <div className="flex items-center gap-1 bg-dark-100 rounded-2xl rounded-bl-sm px-4 py-2.5">
+          <div className="flex items-center gap-2 sm:gap-3 px-2 py-1 animate-fade-in">
+            <div className="flex items-center gap-1 bg-dark-100 rounded-2xl rounded-bl-sm px-3 sm:px-4 py-2 sm:py-2.5">
               <div className="flex gap-1">
                 {[0, 150, 300].map((delay) => (
-                  <div key={delay} className="w-2 h-2 bg-white/50 rounded-full animate-bounce"
+                  <div key={delay} className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white/50 rounded-full animate-bounce"
                     style={{ animationDelay: `${delay}ms` }} />
                 ))}
               </div>
             </div>
-            <span className="text-xs text-white/30">
+            <span className="text-xs text-white/30 truncate">
               {typingUsers.map((u) => u.userName).join(", ")} likh raha hai...
             </span>
           </div>
@@ -634,9 +654,9 @@ export default function ChatWindow({ room }) {
       {/* ── Modals ── */}
       {showProfile && isDM && (
         <ProfileModal
-          user={profileUser}           // ✅ fresh data
+          user={profileUser}
           isOnline={otherIsOnline}
-          onClose={closeProfile}       // ✅ state reset
+          onClose={closeProfile}
         />
       )}
 
