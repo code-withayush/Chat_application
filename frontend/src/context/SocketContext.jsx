@@ -15,7 +15,8 @@ export const SocketProvider = ({ children }) => {
       return;
     }
 
-    const s = io(window.location.origin.replace("5173", "5000"), {
+    // ✅ Fix: env variable use karo, replace() fragile tha
+    const s = io(import.meta.env.VITE_API_URL, {
       auth: { token: user.token },
       transports: ["websocket", "polling"],
     });
@@ -32,7 +33,6 @@ export const SocketProvider = ({ children }) => {
     });
 
     setSocket(s);
-
     return () => { s.disconnect(); };
   }, [user?.token]);
 

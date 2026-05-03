@@ -4,7 +4,7 @@ import { useSocket } from "../context/SocketContext";
 import API from "../utils/api";
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
-import { FiUsers, FiHash } from "react-icons/fi";
+import { FiUsers } from "react-icons/fi";
 
 export default function ChatWindow({ room }) {
   const { user } = useAuth();
@@ -23,34 +23,46 @@ export default function ChatWindow({ room }) {
       setMessages(data);
     } catch {}
     setLoading(false);
-  }, [room]);
+  }, [room?._id]);
 
   useEffect(() => {
     fetchMessages();
     setTypingUsers([]);
     setReplyTo(null);
-  }, [room]);
+  }, [room?._id]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Socket events
+  // ✅ FIXED Socket events
   useEffect(() => {
     if (!socket || !room) return;
 
     socket.emit("room:join", room._id);
 
+    // Pehle purane listeners hata do
+    socket.off("message:new");
+    socket.off("message:deleted");
+    socket.off("message:reacted");
+    socket.off("typing:start");
+    socket.off("typing:stop");
+
     socket.on("message:new", (msg) => {
-      if (msg.room === room._id) {
-        setMessages((prev) => [...prev, msg]);
+      if (msg.room === room._id || msg.room?.toString() === room._id?.toString()) {
+        setMessages((prev) => {
+          if (prev.find((m) => m._id === msg._id)) return prev;
+          return [...prev, msg];
+        });
       }
     });
 
     socket.on("message:deleted", ({ messageId }) => {
       setMessages((prev) =>
         prev.map((m) =>
-          m._id === messageId ? { ...m, isDeleted: true, text: "Yeh message delete ho gaya" } : m
+          m._id === messageId
+            ? { ...m, isDeleted: true, text: "Yeh message delete ho gaya" }
+            : m
         )
       );
     });
@@ -60,7 +72,7 @@ export default function ChatWindow({ room }) {
     });
 
     socket.on("typing:start", ({ userId, userName, roomId }) => {
-      if (roomId === room._id && userId !== user._id) {
+      if (roomId === room._id && userId !== user?._id) {
         setTypingUsers((prev) => {
           if (prev.find((u) => u.userId === userId)) return prev;
           return [...prev, { userId, userName }];
@@ -81,7 +93,7 @@ export default function ChatWindow({ room }) {
       socket.off("typing:start");
       socket.off("typing:stop");
     };
-  }, [socket, room]);
+  }, [socket, room?._id]); // ✅ room._id pe depend karo
 
   const sendMessage = (text) => {
     if (!socket || !room || !text.trim()) return;
@@ -108,7 +120,6 @@ export default function ChatWindow({ room }) {
     socket.emit(isTyping ? "typing:start" : "typing:stop", { roomId: room._id });
   };
 
-  // No room selected
   if (!room) {
     return (
       <div className="flex-1 flex items-center justify-center bg-dark-300">
@@ -170,14 +181,17 @@ export default function ChatWindow({ room }) {
           <div className="flex flex-col items-center justify-center h-full text-center py-12">
             <span className="text-5xl mb-4">{room.icon || "👋"}</span>
             <p className="text-white/40 font-medium">
-              {isDM ? `${otherMember?.name} ko pehla message bhejo!` : `#${room.name} mein pehla message bhejo!`}
+              {isDM
+                ? `${otherMember?.name} ko pehla message bhejo!`
+                : `#${room.name} mein pehla message bhejo!`}
             </p>
           </div>
         ) : (
           messages.map((msg, i) => {
             const prevMsg = messages[i - 1];
             const showAvatar =
-              !prevMsg || prevMsg.sender?._id !== msg.sender?._id ||
+              !prevMsg ||
+              prevMsg.sender?._id !== msg.sender?._id ||
               new Date(msg.createdAt) - new Date(prevMsg.createdAt) > 300000;
 
             return (
@@ -194,7 +208,6 @@ export default function ChatWindow({ room }) {
           })
         )}
 
-        {/* Typing indicator */}
         {typingUsers.length > 0 && (
           <div className="flex items-center gap-3 px-2 py-1 animate-fade-in">
             <div className="flex items-center gap-1 bg-dark-100 rounded-2xl rounded-bl-sm px-4 py-2.5">
@@ -218,7 +231,7 @@ export default function ChatWindow({ room }) {
         onTyping={handleTyping}
         replyTo={replyTo}
         onCancelReply={() => setReplyTo(null)}
-        roomName={room.name}
+        roomName={isDM ? otherMember?.name : room.name}
       />
     </div>
   );

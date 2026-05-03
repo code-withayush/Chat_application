@@ -57,11 +57,13 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
   };
 
   const fetchUsers = async () => {
-    try {
-      const { data } = await API.get("/auth/users");
-      setUsers(data);
-    } catch {}
-  };
+  try {
+    const { data } = await API.get("/auth/users");
+    setUsers(data);
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const createRoom = async () => {
     if (!newRoomName.trim()) return toast.error("Room ka naam likho");
@@ -82,7 +84,7 @@ export default function Sidebar({ activeRoom, setActiveRoom }) {
 
   const openDM = async (userId) => {
     try {
-      const { data } = await API.post(`/rooms/direct/${userId}`);
+      const { data } = await API.post(`/rooms/direct/${userId}`) ;
       setActiveRoom(data);
       setTab("dms");
       await fetchDMs();
