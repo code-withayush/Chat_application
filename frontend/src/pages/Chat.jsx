@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Sidebar from "../components/sidebar";
+import Sidebar from "../components/Sidebar";
 import ChatWindow from "../components/ChatWindow";
 
 export default function Chat() {
@@ -9,7 +9,7 @@ export default function Chat() {
     <div className="flex h-screen bg-dark-300 overflow-hidden">
 
       {/* ── SIDEBAR ──
-          Mobile : no room selected = full screen | room selected = hide
+          Mobile : no room selected = full screen | room selected = hide (no)
           Desktop: always on the side
       */}
       <div className={`h-full w-full lg:w-72 shrink-0 flex flex-col ${activeRoom ? "hidden lg:flex" : "flex"}`}>
