@@ -15,19 +15,19 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
-    const { data } = await API.post("/auth/login", { email, password });
-    setUser(data);
-    localStorage.setItem("chatUser", JSON.stringify(data));
-    return data;
-  };
+ const login = async (email, password) => {
+  const { data } = await API.post("/api/auth/login", { email, password });
+  setUser(data);
+  localStorage.setItem("chatUser", JSON.stringify(data));
+  return data;
+};
 
-  const register = async (name, email, password, bio) => {
-    const { data } = await API.post("/auth/register", { name, email, password, bio });
-    setUser(data);
-    localStorage.setItem("chatUser", JSON.stringify(data));
-    return data;
-  };
+const register = async (name, email, password, bio) => {
+  const { data } = await API.post("/api/auth/register", { name, email, password, bio });
+  setUser(data);
+  localStorage.setItem("chatUser", JSON.stringify(data));
+  return data;
+};
 
   const logout = async () => {
     try { await API.post("/auth/logout"); } catch {}
