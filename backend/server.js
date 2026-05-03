@@ -8,12 +8,14 @@ const authRoutes = require("./routes/auth");
 const messageRoutes = require("./routes/messages");
 const roomRoutes = require("./routes/rooms");
 const socketHandler = require("./socket/socketHandler");
+const uploadRoute = require("./routes/upload");
 
 dotenv.config();
 connectDB();
 
 const app = express();
 const server = http.createServer(app);
+
 
 const io = new Server(server, {
   cors: {
@@ -32,6 +34,8 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/rooms", roomRoutes);
+app.use("/api/upload", uploadRoute);
+app.use("/uploads", express.static("uploads"));
 
 app.get("/", (req, res) => {
   res.json({ message: "MERN Chat API chal raha hai ✅" });

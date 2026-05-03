@@ -38,7 +38,6 @@ router.post("/register", async (req, res) => {
       avatarColor: randomColor,
     });
 
-    // Default General room mein add karo
     let generalRoom = await Room.findOne({ name: "General", isDirect: false });
     if (!generalRoom) {
       generalRoom = await Room.create({
@@ -61,6 +60,9 @@ router.post("/register", async (req, res) => {
       email: user.email,
       bio: user.bio,
       avatarColor: user.avatarColor,
+      isOnline: true,
+      lastSeen: user.lastSeen,
+      createdAt: user.createdAt,
       token: generateToken(user._id),
     });
   } catch (error) {
@@ -90,6 +92,8 @@ router.post("/login", async (req, res) => {
       bio: user.bio,
       avatarColor: user.avatarColor,
       isOnline: user.isOnline,
+      lastSeen: user.lastSeen,
+      createdAt: user.createdAt,
       token: generateToken(user._id),
     });
   } catch (error) {
@@ -124,18 +128,19 @@ router.put("/profile", protect, async (req, res) => {
       email: updatedUser.email,
       bio: updatedUser.bio,
       avatarColor: updatedUser.avatarColor,
+      isOnline: updatedUser.isOnline,
+      lastSeen: updatedUser.lastSeen,
+      createdAt: updatedUser.createdAt,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// GET /api/auth/users - sab users
+// GET /api/auth/users
 router.get("/users", protect, async (req, res) => {
   try {
-    const users = await User.find({ _id: { $ne: req.user._id } }).select(
-      "-password"
-    );
+    const users = await User.find({ _id: { $ne: req.user._id } }).select("-password");
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Server error" });

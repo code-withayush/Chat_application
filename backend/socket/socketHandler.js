@@ -24,31 +24,31 @@ const socketHandler = (io) => {
     const userId = socket.user._id.toString();
     console.log(`✅ User connected: ${socket.user.name} (${userId})`);
 
+    // ✅ User apna personal room join kare (calls ke liye)
+    socket.join(`user:${userId}`);
+
     onlineUsers.set(userId, socket.id);
     await User.findByIdAndUpdate(userId, { isOnline: true, lastSeen: new Date() });
     io.emit("user:online", { userId, name: socket.user.name });
 
-    // ✅ FIX 1: Connection pe hi saare rooms auto-join karo
+    // Auto-join all rooms
     try {
       const userRooms = await Room.find({ members: socket.user._id });
-      userRooms.forEach((room) => {
-        socket.join(room._id.toString());
-      });
+      userRooms.forEach((room) => socket.join(room._id.toString()));
       console.log(`📦 ${socket.user.name} ne ${userRooms.length} rooms auto-join kiye`);
     } catch (err) {
       console.error("Auto-join error:", err);
     }
 
-    // Room join (manual - ab bhi rakhna zaroori hai)
+    // ── Room Events ────────────────────────────────────
     socket.on("room:join", async (roomId) => {
       socket.join(roomId);
       socket.emit("room:joined", roomId);
     });
 
-    socket.on("room:leave", (roomId) => {
-      socket.leave(roomId);
-    });
+    socket.on("room:leave", (roomId) => socket.leave(roomId));
 
+    // ── Message Events ─────────────────────────────────
     socket.on("message:send", async (data) => {
       try {
         const { roomId, text, replyTo, type, fileUrl } = data;
@@ -57,15 +57,14 @@ const socketHandler = (io) => {
         const room = await Room.findById(roomId);
         if (!room) return;
 
-        // ✅ FIX 2: Jo members online hain unhe forcefully room join kara do
-        const onlineMemberSockets = room.members
+        // Online members ko forcefully join karo
+        room.members
           .map((m) => onlineUsers.get(m.toString()))
-          .filter(Boolean);
-
-        onlineMemberSockets.forEach((socketId) => {
-          const memberSocket = io.sockets.sockets.get(socketId);
-          if (memberSocket) memberSocket.join(roomId);
-        });
+          .filter(Boolean)
+          .forEach((socketId) => {
+            const memberSocket = io.sockets.sockets.get(socketId);
+            if (memberSocket) memberSocket.join(roomId);
+          });
 
         const message = await Message.create({
           room: roomId,
@@ -89,18 +88,6 @@ const socketHandler = (io) => {
         console.error("Message send error:", error);
         socket.emit("error", { message: "Message nahi gaya" });
       }
-    });
-
-    socket.on("typing:start", ({ roomId }) => {
-      socket.to(roomId).emit("typing:start", {
-        userId,
-        userName: socket.user.name,
-        roomId,
-      });
-    });
-
-    socket.on("typing:stop", ({ roomId }) => {
-      socket.to(roomId).emit("typing:stop", { userId, roomId });
     });
 
     socket.on("message:delete", async ({ messageId, roomId }) => {
@@ -145,6 +132,57 @@ const socketHandler = (io) => {
       }
     });
 
+    // ── Typing Events ──────────────────────────────────
+    socket.on("typing:start", ({ roomId }) => {
+      socket.to(roomId).emit("typing:start", {
+        userId,
+        userName: socket.user.name,
+        roomId,
+      });
+    });
+
+    socket.on("typing:stop", ({ roomId }) => {
+      socket.to(roomId).emit("typing:stop", { userId, roomId });
+    });
+
+    // ── Call Signaling ─────────────────────────────────
+    socket.on("call:initiate", ({ targetUserId, callType, callerName }) => {
+      io.to(`user:${targetUserId}`).emit("call:incoming", {
+        callerId: userId,
+        callerName,
+        callType,
+      });
+    });
+
+    socket.on("call:accepted", ({ callerId }) => {
+      io.to(`user:${callerId}`).emit("call:accepted");
+    });
+
+    socket.on("call:rejected", ({ callerId }) => {
+      io.to(`user:${callerId}`).emit("call:rejected");
+    });
+
+    socket.on("call:ended", ({ targetUserId }) => {
+      io.to(`user:${targetUserId}`).emit("call:ended");
+    });
+
+    // ── WebRTC Signaling ───────────────────────────────
+    socket.on("webrtc:offer", ({ targetUserId, offer }) => {
+      io.to(`user:${targetUserId}`).emit("webrtc:offer", {
+        callerId: userId,
+        offer,
+      });
+    });
+
+    socket.on("webrtc:answer", ({ targetUserId, answer }) => {
+      io.to(`user:${targetUserId}`).emit("webrtc:answer", { answer });
+    });
+
+    socket.on("webrtc:ice-candidate", ({ targetUserId, candidate }) => {
+      io.to(`user:${targetUserId}`).emit("webrtc:ice-candidate", { candidate });
+    });
+
+    // ── Disconnect ─────────────────────────────────────
     socket.on("disconnect", async () => {
       console.log(`❌ User disconnected: ${socket.user.name}`);
       onlineUsers.delete(userId);

@@ -4,7 +4,20 @@ const Message = require("../models/Message");
 const Room = require("../models/Room");
 const { protect } = require("../middleware/authMiddleware");
 
-// GET /api/messages/:roomId - room ke messages
+// ✅ IMPORTANT: /clear/:roomId pehle hona chahiye — warna Express
+// "clear" ko messageId samajh leta hai aur galat route match karta hai
+
+// DELETE /api/messages/clear/:roomId
+router.delete("/clear/:roomId", protect, async (req, res) => {
+  try {
+    await Message.deleteMany({ room: req.params.roomId });
+    res.json({ message: "Chat clear ho gaya" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// GET /api/messages/:roomId
 router.get("/:roomId", protect, async (req, res) => {
   try {
     const room = await Room.findById(req.params.roomId);
@@ -24,7 +37,6 @@ router.get("/:roomId", protect, async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    // Read mark karo
     await Message.updateMany(
       { room: req.params.roomId, readBy: { $ne: req.user._id } },
       { $addToSet: { readBy: req.user._id } }
@@ -36,11 +48,10 @@ router.get("/:roomId", protect, async (req, res) => {
   }
 });
 
-// POST /api/messages/:roomId - message bhejo
+// POST /api/messages/:roomId
 router.post("/:roomId", protect, async (req, res) => {
   try {
     const { text, replyTo, type, fileUrl } = req.body;
-
     if (!text && !fileUrl) {
       return res.status(400).json({ message: "Message khali nahi ho sakta" });
     }
@@ -58,7 +69,6 @@ router.post("/:roomId", protect, async (req, res) => {
       readBy: [req.user._id],
     });
 
-    // Room ka last message update karo
     room.lastMessage = message._id;
     await room.save();
 
@@ -72,7 +82,7 @@ router.post("/:roomId", protect, async (req, res) => {
   }
 });
 
-// DELETE /api/messages/:messageId - message delete karo
+// DELETE /api/messages/:messageId
 router.delete("/:messageId", protect, async (req, res) => {
   try {
     const message = await Message.findById(req.params.messageId);
@@ -92,7 +102,7 @@ router.delete("/:messageId", protect, async (req, res) => {
   }
 });
 
-// PUT /api/messages/:messageId/react - reaction add karo
+// PUT /api/messages/:messageId/react
 router.put("/:messageId/react", protect, async (req, res) => {
   try {
     const { emoji } = req.body;
@@ -100,7 +110,6 @@ router.put("/:messageId/react", protect, async (req, res) => {
     if (!message) return res.status(404).json({ message: "Message nahi mila" });
 
     const existingReaction = message.reactions.find((r) => r.emoji === emoji);
-
     if (existingReaction) {
       const userIndex = existingReaction.users.indexOf(req.user._id);
       if (userIndex > -1) {
