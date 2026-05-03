@@ -198,3 +198,85 @@
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
   40%           { transform: scale(1);   opacity: 1;   }
 }
+/* =============================================
+   PASTE THESE ADDITIONS INTO YOUR index.css
+   (inside the existing light theme section)
+   ============================================= */
+
+/* ── Message Input Bar (bottom bar) ── */
+[data-theme="light"] .bg-dark-200\/80 {
+  background-color: rgba(247, 248, 252, 0.97) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Textarea wrapper (the rounded box around input) ── */
+[data-theme="light"] .bg-dark-100.border.rounded-2xl,
+[data-theme="light"] .bg-dark-100.border.rounded-2xl.flex {
+  background-color: #ffffff !important;
+  border-color: #d1d5db !important;
+}
+
+/* ── Textarea / input inside message bar ── */
+[data-theme="light"] textarea.bg-transparent {
+  background-color: transparent !important;
+  color: #111111 !important;
+}
+[data-theme="light"] textarea.bg-transparent::placeholder {
+  color: #aaaaaa !important;
+}
+
+/* ── Mic / Send button area ── */
+[data-theme="light"] .bg-white\/10.hover\:bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.07) !important;
+}
+
+/* ── Bottom hint text ── */
+[data-theme="light"] .text-white\/15 {
+  color: #bbbbbb !important;
+}
+
+/* ── Modals (React inline styles — more robust selectors) ── */
+[data-theme="light"] .fixed.inset-0 > div[style],
+[data-theme="light"] .fixed.inset-0 > div > div[style] {
+  background: #ffffff !important;
+}
+
+/* Target the dark modal card by its shadow class */
+[data-theme="light"] .shadow-2xl[style*="background"] {
+  background: #ffffff !important;
+}
+
+/* Settings & Profile modal bg */
+[data-theme="light"] .rounded-t-3xl,
+[data-theme="light"] .sm\:rounded-2xl {
+  background-color: #ffffff !important;
+}
+
+/* ── Settings modal toggle track ── */
+[data-theme="light"] .bg-white\/20 {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ── Icon buttons in input bar ── */
+[data-theme="light"] .text-white\/40.hover\:text-white\/70 {
+  color: #555555 !important;
+}
+[data-theme="light"] .text-white\/40.hover\:text-white\/70:hover {
+  color: #222222 !important;
+}
+
+/* ── Recording indicator ── */
+[data-theme="light"] .bg-red-500\/10 {
+  background-color: rgba(239, 68, 68, 0.08) !important;
+}
+
+/* ── Uploading indicator ── */
+[data-theme="light"] .bg-primary-500\/10 {
+  background-color: rgba(124, 58, 237, 0.08) !important;
+}
+
+/* ── Reply-to preview strip ── */
+[data-theme="light"] .bg-white\/5.border-l-2 {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+}
+

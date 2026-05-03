@@ -1,7 +1,7 @@
 // src/components/Sidebar.jsx
 
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from ".../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import API from "../utils/api";
 import toast from "react-hot-toast";
