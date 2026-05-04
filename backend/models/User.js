@@ -26,6 +26,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    // ✅ NAYA: Real profile photo URL (null = avatar use karo)
+    profilePhoto: {
+      type: String,
+      default: null,
+    },
     avatarColor: {
       type: String,
       default: "#7C3AED",

@@ -1,8 +1,11 @@
 const express = require("express");
-const router = express.Router();
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
-const Room = require("../models/Room");
+const router  = express.Router();
+const jwt     = require("jsonwebtoken");
+const multer  = require("multer");
+const path    = require("path");
+const fs      = require("fs");
+const User    = require("../models/User");
+const Room    = require("../models/Room");
 const { protect } = require("../middleware/authMiddleware");
 
 const generateToken = (id) => {
@@ -14,7 +17,28 @@ const AVATAR_COLORS = [
   "#D97706", "#DC2626", "#0284C7", "#7C3AED",
 ];
 
-// POST /api/auth/register
+// ── Multer config (profile photos ke liye) ──────────────────────
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, "..", "uploads");
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    cb(null, `profile-${req.user._id}-${Date.now()}${path.extname(file.originalname)}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Sirf image files allowed hain"));
+  },
+});
+
+// ── POST /api/auth/register ─────────────────────────────────────
 router.post("/register", async (req, res) => {
   try {
     const { name, email, password, bio } = req.body;
@@ -55,15 +79,16 @@ router.post("/register", async (req, res) => {
     }
 
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      bio: user.bio,
+      _id:         user._id,
+      name:        user.name,
+      email:       user.email,
+      bio:         user.bio,
       avatarColor: user.avatarColor,
-      isOnline: true,
-      lastSeen: user.lastSeen,
-      createdAt: user.createdAt,
-      token: generateToken(user._id),
+      profilePhoto: user.profilePhoto || null,
+      isOnline:    true,
+      lastSeen:    user.lastSeen,
+      createdAt:   user.createdAt,
+      token:       generateToken(user._id),
     });
   } catch (error) {
     console.error(error);
@@ -71,7 +96,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// POST /api/auth/login
+// ── POST /api/auth/login ────────────────────────────────────────
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -86,22 +111,23 @@ router.post("/login", async (req, res) => {
     await user.save();
 
     res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      bio: user.bio,
+      _id:         user._id,
+      name:        user.name,
+      email:       user.email,
+      bio:         user.bio,
       avatarColor: user.avatarColor,
-      isOnline: user.isOnline,
-      lastSeen: user.lastSeen,
-      createdAt: user.createdAt,
-      token: generateToken(user._id),
+      profilePhoto: user.profilePhoto || null,
+      isOnline:    user.isOnline,
+      lastSeen:    user.lastSeen,
+      createdAt:   user.createdAt,
+      token:       generateToken(user._id),
     });
   } catch (error) {
     res.status(500).json({ message: "Server error: " + error.message });
   }
 });
 
-// GET /api/auth/me
+// ── GET /api/auth/me ────────────────────────────────────────────
 router.get("/me", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
@@ -111,33 +137,76 @@ router.get("/me", protect, async (req, res) => {
   }
 });
 
-// PUT /api/auth/profile
+// ── PUT /api/auth/profile ───────────────────────────────────────
 router.put("/profile", protect, async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User nahi mila" });
 
     user.name = req.body.name || user.name;
-    user.bio = req.body.bio || user.bio;
+    user.bio  = req.body.bio  || user.bio;
     if (req.body.avatarColor) user.avatarColor = req.body.avatarColor;
 
     const updatedUser = await user.save();
     res.json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      bio: updatedUser.bio,
+      _id:         updatedUser._id,
+      name:        updatedUser.name,
+      email:       updatedUser.email,
+      bio:         updatedUser.bio,
       avatarColor: updatedUser.avatarColor,
-      isOnline: updatedUser.isOnline,
-      lastSeen: updatedUser.lastSeen,
-      createdAt: updatedUser.createdAt,
+      profilePhoto: updatedUser.profilePhoto || null,
+      isOnline:    updatedUser.isOnline,
+      lastSeen:    updatedUser.lastSeen,
+      createdAt:   updatedUser.createdAt,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// GET /api/auth/users
+// ── POST /api/auth/profile/photo ────────────────────────────────
+router.post("/profile/photo", protect, upload.single("photo"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: "Koi file upload nahi hui" });
+
+    const user = await User.findById(req.user._id);
+
+    // Purani photo delete karo (agar thi)
+    if (user.profilePhoto) {
+      const oldPath = path.join(__dirname, "..", "uploads", path.basename(user.profilePhoto));
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+    }
+
+    user.profilePhoto = `/uploads/${req.file.filename}`;
+    await user.save();
+
+    res.json({ profilePhoto: user.profilePhoto });
+  } catch (error) {
+    console.error("uploadProfilePhoto:", error);
+    res.status(500).json({ message: "Server error: " + error.message });
+  }
+});
+
+// ── DELETE /api/auth/profile/photo ──────────────────────────────
+router.delete("/profile/photo", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user.profilePhoto) {
+      const oldPath = path.join(__dirname, "..", "uploads", path.basename(user.profilePhoto));
+      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      user.profilePhoto = null;
+      await user.save();
+    }
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error("removeProfilePhoto:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// ── GET /api/auth/users ─────────────────────────────────────────
 router.get("/users", protect, async (req, res) => {
   try {
     const users = await User.find({ _id: { $ne: req.user._id } }).select("-password");
@@ -147,7 +216,7 @@ router.get("/users", protect, async (req, res) => {
   }
 });
 
-// POST /api/auth/logout
+// ── POST /api/auth/logout ───────────────────────────────────────
 router.post("/logout", protect, async (req, res) => {
   try {
     await User.findByIdAndUpdate(req.user._id, {
