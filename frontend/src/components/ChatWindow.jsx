@@ -2,11 +2,12 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import API from "../utils/api";
+import { getMediaUrl } from "../utils/getMediaUrl"; // ← NEW
 import MessageBubble from "./MessageBubble";
 import MessageInput from "./MessageInput";
 import {
   FiUsers, FiPhone, FiVideo, FiMoreVertical, FiTrash2, FiX,
-  FiMessageSquare, FiMail, FiClock, FiUserCheck, FiArrowLeft, FiChevronLeft
+  FiMessageSquare, FiMail, FiClock, FiUserCheck, FiChevronLeft
 } from "react-icons/fi";
 import toast from "react-hot-toast";
 
@@ -48,12 +49,22 @@ function ProfileModal({ user, isOnline, onClose }) {
 
         <div className="px-5 pb-6 max-h-[70vh] overflow-y-auto" style={{ marginTop: "-40px" }}>
           <div className="mb-3 relative inline-block">
-            <div
-              className="w-20 h-20 rounded-full border-4 flex items-center justify-center text-white text-3xl font-bold"
-              style={{ backgroundColor: user.avatarColor || "#7b2ff7", borderColor: "#1a1a2e" }}
-            >
-              {user.name?.[0]?.toUpperCase()}
-            </div>
+            {/* FIX: use getMediaUrl for profile photo */}
+            {user.profilePhoto ? (
+              <img
+                src={getMediaUrl(user.profilePhoto)}
+                alt={user.name}
+                className="w-20 h-20 rounded-full border-4 object-cover"
+                style={{ borderColor: "#1a1a2e" }}
+              />
+            ) : (
+              <div
+                className="w-20 h-20 rounded-full border-4 flex items-center justify-center text-white text-3xl font-bold"
+                style={{ backgroundColor: user.avatarColor || "#7b2ff7", borderColor: "#1a1a2e" }}
+              >
+                {user.name?.[0]?.toUpperCase()}
+              </div>
+            )}
             <span
               className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full border-2"
               style={{ backgroundColor: isOnline ? "#22c55e" : "#6b7280", borderColor: "#1a1a2e" }}
@@ -242,17 +253,27 @@ function CallModal({ callType, otherUser, socket, targetUserId, onEnd, isIncomin
 }
 
 // ── Message Renderer ────────────────────────────────────────────
+// FIX: Use getMediaUrl so production URLs resolve correctly
 function renderMessageContent(text) {
   if (!text) return null;
+
   if (text.startsWith("[IMAGE]") && text.endsWith("[/IMAGE]")) {
-    const url = text.slice(7, -8);
+    const rawUrl = text.slice(7, -8);
+    const url = getMediaUrl(rawUrl);
     return (
-      <img src={url} alt="Shared" className="max-w-[200px] sm:max-w-xs max-h-64 rounded-xl object-cover cursor-pointer hover:opacity-90"
-        onClick={() => window.open(url, "_blank")} />
+      <img
+        src={url}
+        alt="Shared"
+        className="max-w-[200px] sm:max-w-xs max-h-64 rounded-xl object-cover cursor-pointer hover:opacity-90"
+        onClick={() => window.open(url, "_blank")}
+        onError={(e) => { e.target.style.display = "none"; }}
+      />
     );
   }
+
   if (text.startsWith("[AUDIO]") && text.endsWith("[/AUDIO]")) {
-    const url = text.slice(7, -8);
+    const rawUrl = text.slice(7, -8);
+    const url = getMediaUrl(rawUrl);
     return (
       <div className="flex items-center gap-2 bg-white/10 rounded-xl px-3 py-2">
         <span>🎙️</span>
@@ -260,8 +281,10 @@ function renderMessageContent(text) {
       </div>
     );
   }
+
   if (text.startsWith("[FILE]") && text.endsWith("[/FILE]")) {
-    const [name, url] = text.slice(6, -6).split("|");
+    const [name, rawUrl] = text.slice(6, -6).split("|");
+    const url = getMediaUrl(rawUrl);
     return (
       <a href={url} target="_blank" rel="noreferrer"
         className="flex items-center gap-2 bg-white/10 hover:bg-white/20 rounded-xl px-3 py-2 transition-colors group">
@@ -273,6 +296,7 @@ function renderMessageContent(text) {
       </a>
     );
   }
+
   return <span>{text}</span>;
 }
 
@@ -288,7 +312,9 @@ export default function ChatWindow({ room, onBack }) {
   const [profileUser, setProfileUser] = useState(null);
   const [showMenu,    setShowMenu]    = useState(false);
   const [callState,   setCallState]   = useState(null);
-  const bottomRef = useRef(null);
+
+  // FIX: ref on the scrollable container, not on a dummy div at the bottom
+  const messagesContainerRef = useRef(null);
 
   const isDM          = room?.isDirect;
   const otherMember   = isDM ? room?.members?.find((m) => m._id !== user?._id) : null;
@@ -297,7 +323,10 @@ export default function ChatWindow({ room, onBack }) {
   const fetchMessages = useCallback(async () => {
     if (!room) return;
     setLoading(true);
-    try { const { data } = await API.get(`/messages/${room._id}`); setMessages(data); } catch {}
+    try {
+      const { data } = await API.get(`/messages/${room._id}`);
+      setMessages(data);
+    } catch {}
     setLoading(false);
   }, [room?._id]);
 
@@ -308,7 +337,14 @@ export default function ChatWindow({ room, onBack }) {
     setShowMenu(false);
   }, [room?._id]);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  // FIX: scroll the container itself instead of using scrollIntoView on a child div
+  // scrollIntoView on mobile can scroll the whole page, hiding the header
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [messages, typingUsers]);
 
   useEffect(() => {
     if (!socket || !room) return;
@@ -327,7 +363,9 @@ export default function ChatWindow({ room, onBack }) {
       }
     });
     socket.on("message:deleted", ({ messageId }) => {
-      setMessages((prev) => prev.map((m) => m._id === messageId ? { ...m, isDeleted: true, text: "This message was deleted" } : m));
+      setMessages((prev) =>
+        prev.map((m) => m._id === messageId ? { ...m, isDeleted: true, text: "This message was deleted" } : m)
+      );
     });
     socket.on("message:reacted", (updated) => {
       setMessages((prev) => prev.map((m) => m._id === updated._id ? updated : m));
@@ -394,9 +432,14 @@ export default function ChatWindow({ room, onBack }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-dark-300 min-w-0" onClick={() => setShowMenu(false)}>
+    // FIX: overflow-hidden here so the flex children are properly constrained
+    <div
+      className="flex-1 flex flex-col bg-dark-300 min-w-0 overflow-hidden"
+      style={{ height: "100%" }}
+      onClick={() => setShowMenu(false)}
+    >
 
-      {/* ══ HEADER ══ */}
+      {/* ══ HEADER — shrink-0 ensures it never gets squeezed ══ */}
       <div className="flex items-center gap-2 px-3 sm:px-4 py-3 bg-dark-200 border-b border-white/5 shrink-0">
         {onBack && (
           <button onClick={onBack} className="lg:hidden p-2 -ml-1 rounded-xl hover:bg-white/10 transition-colors shrink-0">
@@ -407,10 +450,18 @@ export default function ChatWindow({ room, onBack }) {
         <button onClick={openProfile} className="shrink-0" disabled={!isDM}>
           {isDM ? (
             <div className="relative">
-              <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm"
-                style={{ backgroundColor: otherMember?.avatarColor || "#7C3AED" }}>
-                {otherMember?.name?.[0]?.toUpperCase() || "?"}
-              </div>
+              {otherMember?.profilePhoto ? (
+                <img
+                  src={getMediaUrl(otherMember.profilePhoto)}
+                  alt={otherMember.name}
+                  className="w-9 h-9 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm"
+                  style={{ backgroundColor: otherMember?.avatarColor || "#7C3AED" }}>
+                  {otherMember?.name?.[0]?.toUpperCase() || "?"}
+                </div>
+              )}
               <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-dark-200 ${otherIsOnline ? "bg-green-400" : "bg-gray-500"}`} />
             </div>
           ) : (
@@ -474,8 +525,11 @@ export default function ChatWindow({ room, onBack }) {
         </div>
       </div>
 
-      {/* ══ MESSAGES ══ */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-4 py-3 sm:py-4 space-y-1">
+      {/* ══ MESSAGES — FIX: ref on THIS container, scroll via scrollTop ══ */}
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto px-2 sm:px-4 py-3 sm:py-4 space-y-1"
+      >
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
@@ -519,7 +573,6 @@ export default function ChatWindow({ room, onBack }) {
             </span>
           </div>
         )}
-        <div ref={bottomRef} />
       </div>
 
       {/* ══ INPUT ══ */}
@@ -533,11 +586,21 @@ export default function ChatWindow({ room, onBack }) {
 
       {/* ══ MODALS ══ */}
       {showProfile && isDM && (
-        <ProfileModal user={profileUser} isOnline={otherIsOnline} onClose={() => { setShowProfile(false); setProfileUser(null); }} />
+        <ProfileModal
+          user={profileUser}
+          isOnline={otherIsOnline}
+          onClose={() => { setShowProfile(false); setProfileUser(null); }}
+        />
       )}
       {callState && (
-        <CallModal callType={callState.type} otherUser={callState.otherUser} socket={socket}
-          targetUserId={callState.targetUserId} isIncoming={callState.isIncoming} onEnd={() => setCallState(null)} />
+        <CallModal
+          callType={callState.type}
+          otherUser={callState.otherUser}
+          socket={socket}
+          targetUserId={callState.targetUserId}
+          isIncoming={callState.isIncoming}
+          onEnd={() => setCallState(null)}
+        />
       )}
     </div>
   );

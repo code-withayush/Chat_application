@@ -6,30 +6,34 @@ export default function Chat() {
   const [activeRoom, setActiveRoom] = useState(null);
 
   return (
-    <div className="flex h-screen bg-dark-300 overflow-hidden">
-
-      {/* ── SIDEBAR ──
-          Mobile : no room selected = full screen | room selected = hide (no)
-          Desktop: always on the side
-      */}
-      <div className={`h-full w-full lg:w-72 shrink-0 flex flex-col ${activeRoom ? "hidden lg:flex" : "flex"}`}>
+    // FIX: use 100dvh so mobile browser chrome (address bar) is excluded from height
+    <div
+      className="flex bg-dark-300 overflow-hidden"
+      style={{ height: "100dvh" }}
+    >
+      {/* ── SIDEBAR ── */}
+      <div
+        className={`h-full w-full lg:w-72 shrink-0 flex flex-col ${
+          activeRoom ? "hidden lg:flex" : "flex"
+        }`}
+      >
         <Sidebar
           activeRoom={activeRoom}
           setActiveRoom={(room) => setActiveRoom(room)}
         />
       </div>
 
-      {/* ── CHAT WINDOW ──
-          Mobile : only when a room is selected
-          Desktop: always visible
-      */}
-      <div className={`flex-1 flex flex-col min-w-0 h-full ${activeRoom ? "flex" : "hidden lg:flex"}`}>
+      {/* ── CHAT WINDOW ── */}
+      <div
+        className={`flex-1 flex flex-col min-w-0 h-full ${
+          activeRoom ? "flex" : "hidden lg:flex"
+        }`}
+      >
         <ChatWindow
           room={activeRoom}
           onBack={() => setActiveRoom(null)}
         />
       </div>
-
     </div>
   );
 }
