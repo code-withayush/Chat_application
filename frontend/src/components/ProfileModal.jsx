@@ -1,8 +1,12 @@
-// ── ProfileModal.jsx ────────────────────────────────────────────
-import { useState, useRef } from "react";
+// ── ProfileModal.jsx ─────────────────────────────────────────────
+import { useState } from "react";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext"; // ✅ path apne hisaab se adjust karo
 
-// ── Reusable Avatar component (photo ya colored letter) ─────────
+// ── Base URL — localhost ya deployed dono pe kaam karega ────────
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+// ── Reusable Avatar component ────────────────────────────────────
 export function Avatar({ user, size = 40, className = "" }) {
   const style = {
     width:           size,
@@ -23,11 +27,18 @@ export function Avatar({ user, size = 40, className = "" }) {
   if (user?.profilePhoto) {
     return (
       <img
-        src={`http://localhost:5000${user.profilePhoto}`}
+        // ✅ FIX: localhost hardcode nahi — env se URL lega
+        src={
+          user.profilePhoto.startsWith("http")
+            ? user.profilePhoto
+            : `${BASE_URL}${user.profilePhoto}`
+        }
         alt={user.name}
         style={{ ...style, backgroundColor: "transparent" }}
         className={className}
-        onError={(e) => { e.target.style.display = "none"; }}
+        onError={(e) => {
+          e.target.style.display = "none";
+        }}
       />
     );
   }
@@ -40,13 +51,17 @@ export function Avatar({ user, size = 40, className = "" }) {
 }
 
 // ── ProfileModal ─────────────────────────────────────────────────
-export default function ProfileModal({ user, onClose, onUpdate }) {
-  const [name,        setName]        = useState(user?.name || "");
-  const [bio,         setBio]         = useState(user?.bio  || "");
+export default function ProfileModal({ onClose, onUpdate }) {
+  // ✅ FIX: user prop ki jagah context se lo — hamesha latest data milega
+  const { user, updateUser } = useAuth();
+
+  const [name,        setName]        = useState(user?.name        || "");
+  const [bio,         setBio]         = useState(user?.bio         || "");
   const [avatarColor, setAvatarColor] = useState(user?.avatarColor || "#128C7E");
   const [preview,     setPreview]     = useState(user?.profilePhoto || null);
   const [photoFile,   setPhotoFile]   = useState(null);
   const [loading,     setLoading]     = useState(false);
+  const [msg,         setMsg]         = useState("");
 
   const COLORS = [
     "#8B5CF6","#3B82F6","#10B981","#EF4444",
@@ -54,57 +69,82 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
     "#7C3AED","#374151",
   ];
 
-  // ✅ FIX: File select handler
+  // ── File select ─────────────────────────────────────────────
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setPhotoFile(file);
-    setPreview(URL.createObjectURL(file));
-    e.target.value = ""; // same file dobara select ho sake
+    setPreview(URL.createObjectURL(file)); // ✅ turant preview dikhao
+    e.target.value = "";
   };
 
-  // Save
+  // ── Save ────────────────────────────────────────────────────
   const handleSave = async () => {
     setLoading(true);
+    setMsg("");
     try {
       let updatedPhoto = user?.profilePhoto || null;
 
+      // Step 1: Photo upload karo agar naya select hua hai
       if (photoFile) {
         const fd = new FormData();
         fd.append("photo", photoFile);
-        const { data } = await axios.post("/api/auth/profile/photo", fd, {
+        const { data } = await axios.post(`${BASE_URL}/api/auth/profile/photo`, fd, {
           headers: { "Content-Type": "multipart/form-data" },
         });
         updatedPhoto = data.profilePhoto;
       }
 
-      const { data: updated } = await axios.put("/api/auth/profile", {
-        name, bio, avatarColor,
+      // Step 2: Name, Bio, Color update karo
+      const { data: updated } = await axios.put(`${BASE_URL}/api/auth/profile`, {
+        name,
+        bio,
+        avatarColor,
       });
 
-      onUpdate?.({ ...updated, profilePhoto: updatedPhoto });
-      onClose();
+      const finalUser = { ...updated, profilePhoto: updatedPhoto };
+
+      // ✅ FIX: Context update — screen turant change hogi, logout ki zaroorat nahi
+      updateUser(finalUser);
+
+      // ✅ Parent component ko bhi batao (agar zaroorat ho)
+      onUpdate?.(finalUser);
+
+      setMsg("✅ Profile save ho gaya!");
+      setTimeout(() => {
+        onClose();
+      }, 800);
     } catch (err) {
-      console.error("Save profile:", err);
-      alert("Kuch galat hua, dobara try karo.");
+      console.error("Save profile error:", err);
+      setMsg("❌ Kuch galat hua, dobara try karo.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Photo remove
+  // ── Photo Remove ────────────────────────────────────────────
   const handleRemovePhoto = async () => {
     if (!window.confirm("Profile photo hatana chahte ho?")) return;
     try {
-      await axios.delete("/api/auth/profile/photo");
+      await axios.delete(`${BASE_URL}/api/auth/profile/photo`);
       setPreview(null);
       setPhotoFile(null);
+
+      // ✅ FIX: Context update karo photo remove par bhi
+      updateUser({ profilePhoto: null });
       onUpdate?.({ ...user, profilePhoto: null });
     } catch (err) {
-      console.error("Remove photo:", err);
+      console.error("Remove photo error:", err);
       alert("Photo remove nahi ho paayi.");
     }
   };
+
+  // ── Preview URL resolve ─────────────────────────────────────
+  const resolvedPreview = preview
+    ? preview.startsWith("blob:") || preview.startsWith("http")
+      ? preview
+      : `${BASE_URL}${preview}`
+    : null;
 
   return (
     <>
@@ -112,13 +152,14 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
       <div
         onClick={onClose}
         style={{
-          position: "fixed", inset: 0,
+          position:   "fixed",
+          inset:      0,
           background: "rgba(0,0,0,0.45)",
-          zIndex: 1000,
+          zIndex:     1000,
         }}
       />
 
-      {/* Modal */}
+      {/* Modal Box */}
       <div
         onClick={(e) => e.stopPropagation()}
         style={{
@@ -145,19 +186,24 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: "#111" }}>
             My Profile
           </h2>
-          <button onClick={onClose} style={{
-            background: "none", border: "none", cursor: "pointer",
-            fontSize: 22, color: "#666", lineHeight: 1,
-          }}>×</button>
+          <button
+            onClick={onClose}
+            style={{
+              background: "none", border: "none",
+              cursor: "pointer", fontSize: 22, color: "#666", lineHeight: 1,
+            }}
+          >
+            ×
+          </button>
         </div>
 
-        {/* Avatar section */}
+        {/* Avatar Section */}
         <div style={{ textAlign: "center", padding: "24px 20px 12px" }}>
           <div style={{ position: "relative", display: "inline-block" }}>
 
-            {preview ? (
+            {resolvedPreview ? (
               <img
-                src={preview.startsWith("blob:") ? preview : `http://localhost:5000${preview}`}
+                src={resolvedPreview}
                 alt="profile"
                 style={{
                   width: 90, height: 90, borderRadius: "50%",
@@ -177,8 +223,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
               </div>
             )}
 
-            {/* ✅ KEY FIX: label use karo button ki jagah
-                htmlFor se directly file input open hoga — koi JS click() nahi */}
+            {/* Camera button — label se file input open hoga */}
             <label
               htmlFor="profile-photo-input"
               style={{
@@ -200,7 +245,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
             </label>
           </div>
 
-          {/* ✅ Input has id matching label's htmlFor */}
+          {/* Hidden file input */}
           <input
             id="profile-photo-input"
             type="file"
@@ -209,7 +254,17 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
             onChange={handleFileSelect}
           />
 
-          {preview && (
+          {/* Name + Status */}
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontWeight: 700, fontSize: 18, color: "#111" }}>
+              {name || user?.name}
+            </div>
+            <div style={{ fontSize: 12, color: "#25D366", marginTop: 2 }}>
+              ● Online
+            </div>
+          </div>
+
+          {resolvedPreview && (
             <div style={{ marginTop: 8 }}>
               <button
                 onClick={handleRemovePhoto}
@@ -218,7 +273,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
                   cursor: "pointer", fontSize: 12, textDecoration: "underline",
                 }}
               >
-                Remove photo
+                Remove Photo
               </button>
             </div>
           )}
@@ -230,7 +285,7 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
           <Field label="Name">
             <input
               value={name}
-              onChange={e => setName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               placeholder="Apna naam daalo"
               style={inputStyle}
             />
@@ -239,16 +294,16 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
           <Field label="Bio">
             <input
               value={bio}
-              onChange={e => setBio(e.target.value)}
+              onChange={(e) => setBio(e.target.value)}
               placeholder="Apne baare mein kuch likho..."
               style={inputStyle}
             />
           </Field>
 
-          {!preview && (
+          {!resolvedPreview && (
             <Field label="Avatar Color">
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 4 }}>
-                {COLORS.map(c => (
+                {COLORS.map((c) => (
                   <button
                     key={c}
                     onClick={() => setAvatarColor(c)}
@@ -279,6 +334,20 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
             </div>
           </Field>
 
+          {/* Status message */}
+          {msg && (
+            <div style={{
+              textAlign:  "center",
+              marginTop:  8,
+              fontSize:   13,
+              color:      msg.startsWith("✅") ? "#10B981" : "#EF4444",
+              fontWeight: 600,
+            }}>
+              {msg}
+            </div>
+          )}
+
+          {/* Save Button */}
           <button
             onClick={handleSave}
             disabled={loading}
@@ -298,18 +367,53 @@ export default function ProfileModal({ user, onClose, onUpdate }) {
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>
+
+          {/* Logout Button */}
+          <LogoutButton />
         </div>
       </div>
     </>
   );
 }
 
+// ── Logout Button (AuthContext se logout) ───────────────────────
+function LogoutButton() {
+  const { logout } = useAuth();
+  return (
+    <button
+      onClick={logout}
+      style={{
+        width:        "100%",
+        marginTop:    10,
+        padding:      "11px 0",
+        background:   "none",
+        color:        "#EF4444",
+        border:       "1.5px solid #EF4444",
+        borderRadius: 10,
+        fontWeight:   700,
+        fontSize:     15,
+        cursor:       "pointer",
+        display:      "flex",
+        alignItems:   "center",
+        justifyContent: "center",
+        gap:          6,
+      }}
+    >
+      <span>↪</span> Log Out
+    </button>
+  );
+}
+
+// ── Helper Components ───────────────────────────────────────────
 function Field({ label, children }) {
   return (
     <div style={{ marginBottom: 14 }}>
       <label style={{
-        display: "block", fontSize: 12,
-        color: "#6b7280", marginBottom: 4, fontWeight: 600,
+        display:    "block",
+        fontSize:   12,
+        color:      "#6b7280",
+        marginBottom: 4,
+        fontWeight: 600,
       }}>
         {label}
       </label>
@@ -331,8 +435,10 @@ const inputStyle = {
 
 function CameraIcon() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-      stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="14" height="14" viewBox="0 0 24 24" fill="none"
+      stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+    >
       <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
       <circle cx="12" cy="13" r="4"/>
     </svg>
