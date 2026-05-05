@@ -1,26 +1,135 @@
 import { useState, useRef, useEffect } from "react";
-import { FiSend, FiX, FiSmile, FiImage, FiFile, FiMic, FiSquare, FiPlus, FiChevronDown } from "react-icons/fi";
+import { FiSend, FiX, FiSmile, FiImage, FiFile, FiMic, FiSquare, FiPlus } from "react-icons/fi";
 import { MdOutlinePayment } from "react-icons/md";
 import API from "../utils/api";
 
-const EMOJIS = [
-  "😀","😁","😂","🤣","😃","😄","😅","😆","😉","😊",
-  "😋","😎","😍","😘","🥰","😗","😙","😚","🙂","🤗",
-  "🤩","🤔","🤨","😐","😑","😶","🙄","😏","😣","😥",
-  "😮","🤐","😯","😪","😫","🥱","😴","😌","😛","😜",
-  "😝","🤤","😒","😓","😔","😕","🙃","🫠","🥲","😢",
-
-  "😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱",
-  "😨","😰","😥","😓","🤗","🤭","🫢","🫣","🫡","🤫",
-  "🫠","🤥","😶‍🌫️","😵","😵‍💫","🤠","🥳","😇","🤓","🧐",
-  "😈","👿","👻","💀","☠️","👽","🤖","🎃","😺","😸",
-  "😹","😻","😼","😽","🙀","😿","😾","🙈","🙉","🙊"
+// ── WhatsApp style emoji categories ─────────────────────────────
+const EMOJI_CATEGORIES = [
+  {
+    name: "Recent",
+    icon: "🕐",
+    emojis: ["😀","😂","❤️","👍","🙏","😍","🎉","🔥","😭","💯"],
+  },
+  {
+    name: "Smileys",
+    icon: "😀",
+    emojis: [
+      "😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","😉","😊","😇","🥰","😍","🤩",
+      "😘","😗","😚","😙","🥲","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🫢","🫣","🤫",
+      "🤔","🫡","🤐","🤨","😐","😑","😶","😶‍🌫️","😏","😒","🙄","😬","🤥","😌","😔","😪",
+      "🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","😵‍💫","🤯","🤠","🥳",
+      "🥸","😎","🤓","🧐","😕","🫤","😟","🙁","☹️","😮","😯","😲","😳","🥺","🫥","😦",
+      "😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡",
+      "😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖",
+    ],
+  },
+  {
+    name: "People",
+    icon: "👋",
+    emojis: [
+      "👋","🤚","🖐️","✋","🖖","🫱","🫲","🫳","🫴","👌","🤌","🤏","✌️","🤞","🫰","🤟",
+      "🤘","🤙","👈","👉","👆","🖕","👇","☝️","🫵","👍","👎","✊","👊","🤛","🤜","👏",
+      "🙌","🫶","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻",
+      "👃","🫀","🫁","🧠","🦷","🦴","👀","👁️","👅","👄","🫦","👶","🧒","👦","👧","🧑",
+      "👱","👨","🧔","👩","🧓","👴","👵","🙍","🙎","🙅","🙆","💁","🙋","🧏","🙇","🤦",
+      "🤷","👮","🕵️","💂","🥷","👷","🫅","🤴","👸","👳","👲","🧕","🤵","👰","🤰","🫃",
+      "🫄","🤱","👼","🎅","🤶","🧑‍🎄","🦸","🦹","🧙","🧝","🧛","🧟","🧞","🧜","🧚","🫧",
+    ],
+  },
+  {
+    name: "Animals",
+    icon: "🐶",
+    emojis: [
+      "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐻‍❄️","🐨","🐯","🦁","🐮","🐷","🐸","🐵",
+      "🙈","🙉","🙊","🐒","🐔","🐧","🐦","🐤","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄",
+      "🐝","🪱","🐛","🦋","🐌","🐞","🐜","🪲","🦟","🦗","🪳","🕷️","🦂","🐢","🐍","🦎",
+      "🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐟","🐠","🐬","🐳","🐋","🦈","🐊","🐅",
+      "🐆","🦓","🦍","🦧","🦣","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🦬","🐃","🐂","🐄",
+      "🫎","🫏","🐎","🐖","🐏","🐑","🦙","🐐","🦌","🐕","🐩","🦮","🐕‍🦺","🐈","🐈‍⬛","🪶",
+      "🐓","🦃","🦤","🦚","🦜","🦢","🦩","🕊️","🐇","🦝","🦨","🦡","🦫","🦦","🦥","🐁",
+      "🐀","🐿️","🦔","🐾","🐉","🐲","🌵","🎄","🌲","🌳","🌴","🪵","🌱","🌿","☘️","🍀",
+    ],
+  },
+  {
+    name: "Food",
+    icon: "🍕",
+    emojis: [
+      "🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥",
+      "🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶️","🫑","🧄","🧅","🥔","🍠","🫘","🌰","🥜",
+      "🍞","🥐","🥖","🫓","🥨","🥯","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖",
+      "🌭","🍔","🍟","🍕","🫔","🌮","🌯","🥙","🧆","🥚","🍲","🫕","🥘","🍛","🍜","🍝",
+      "🍠","🍢","🍣","🍤","🍙","🍚","🍱","🥟","🦪","🍦","🍧","🍨","🍩","🍪","🎂","🍰",
+      "🧁","🥧","🍫","🍬","🍭","🍮","🍯","🍼","🥛","☕","🫖","🍵","🧃","🥤","🧋","🍶",
+      "🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾","🧊","🥄","🍴","🍽️","🥢","🫙",
+    ],
+  },
+  {
+    name: "Travel",
+    icon: "✈️",
+    emojis: [
+      "🚗","🚕","🚙","🚌","🚎","🏎️","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🏍️","🛵",
+      "🛺","🚲","🛴","🛹","🛼","🚏","🛣️","🛤️","⛽","🚨","🚥","🚦","🛑","🚧","⚓","🛟",
+      "⛵","🚤","🛥️","🛳️","⛴️","🚢","✈️","🛩️","🛫","🛬","🛰️","🚀","🛸","🪂","💺","🚁",
+      "🚂","🚃","🚄","🚅","🚆","🚇","🚈","🚉","🚊","🚝","🚞","🚋","🏔️","⛰️","🌋","🗻",
+      "🏕️","🏖️","🏜️","🏝️","🏞️","🏟️","🏛️","🏗️","🏘️","🏚️","🏠","🏡","🏢","🏣","🏤","🏥",
+      "🏦","🏨","🏩","🏪","🏫","🏬","🏭","🏯","🏰","💒","🗼","🗽","⛪","🕌","🛕","🕍",
+      "⛩️","🕋","⛲","⛺","🌁","🌃","🏙️","🌄","🌅","🌆","🌇","🌉","♨️","🎠","🛝","🎡",
+    ],
+  },
+  {
+    name: "Activities",
+    icon: "⚽",
+    emojis: [
+      "⚽","🏀","🏈","⚾","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🥍","🏑",
+      "🥅","⛳","🪁","🏹","🎣","🤿","🥊","🥋","🎽","🛹","🛷","⛸️","🥌","🎿","🪃","🪂",
+      "🏋️","🤼","🤸","⛹️","🤺","🤾","🏌️","🏇","🧘","🏄","🏊","🚵","🚴","🏆","🥇","🥈",
+      "🥉","🏅","🎖️","🏵️","🎗️","🎫","🎟️","🎪","🤹","🎭","🎨","🎬","🎤","🎧","🎼","🎹",
+      "🥁","🪘","🎷","🎺","🪗","🎸","🪕","🎻","🎲","♟️","🎯","🎳","🎮","🎰","🧩","🪄",
+      "🧸","🪅","🪩","🎭","🖼️","🎠","🎡","🎢","🎪","🎟️","🎠","🎈","🎆","🎇","🧨","✨",
+    ],
+  },
+  {
+    name: "Objects",
+    icon: "💡",
+    emojis: [
+      "⌚","📱","📲","💻","⌨️","🖥️","🖨️","🖱️","🖲️","💽","💾","💿","📀","📷","📸","📹",
+      "🎥","📽️","🎞️","📞","☎️","📟","📠","📺","📻","🧭","⏱️","⏲️","⏰","🕰️","⌛","⏳",
+      "📡","🔋","🔌","💡","🔦","🕯️","🪔","🧯","🛢️","💰","💴","💵","💶","💷","💸","💳",
+      "🪙","💹","📈","📉","📊","📋","📌","📍","✂️","🗃️","🗄️","🗑️","🔒","🔓","🔏","🔐",
+      "🔑","🗝️","🔨","🪓","⛏️","⚒️","🛠️","🗡️","⚔️","🛡️","🪚","🔧","🪛","🔩","⚙️","🗜️",
+      "⚖️","🦯","🔗","⛓️","🪝","🧲","🪜","🧰","🧲","🪣","🧪","🧫","🧬","🔭","🔬","🪟",
+      "🚪","🛋️","🪑","🚽","🪠","🚿","🛁","🪤","🪒","🧴","🧷","🧹","🧺","🧻","🪣","🧼",
+    ],
+  },
+  {
+    name: "Symbols",
+    icon: "❤️",
+    emojis: [
+      "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","💕","💞","💓","💗",
+      "💖","💘","💝","💟","☮️","✝️","☪️","🕉️","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎",
+      "♈","♉","♊","♋","♌","♍","♎","♏","♐","♑","♒","♓","🆔","⚕️","♾️","♻️",
+      "⚜️","🔱","📛","🔰","⭕","✅","☑️","✔️","❎","❌","❓","❔","❕","❗","💯","🔅",
+      "🔆","🔱","⚜️","🏧","💲","💱","©️","®️","™️","🔴","🟠","🟡","🟢","🔵","🟣","⚫",
+      "⚪","🟤","🔶","🔷","🔸","🔹","🔺","🔻","💠","🔘","🔳","🔲","▪️","▫️","◾","◽",
+      "◼️","◻️","🟥","🟧","🟨","🟩","🟦","🟪","⬛","⬜","🟫","🔈","🔉","🔊","🔔","🔕",
+    ],
+  },
+  {
+    name: "Flags",
+    icon: "🏳️",
+    emojis: [
+      "🏳️","🏴","🏴‍☠️","🚩","🏁","🏳️‍🌈","🏳️‍⚧️","🇮🇳","🇺🇸","🇬🇧","🇨🇦","🇦🇺","🇩🇪","🇫🇷","🇯🇵","🇰🇷",
+      "🇨🇳","🇷🇺","🇧🇷","🇲🇽","🇮🇹","🇪🇸","🇵🇹","🇸🇦","🇦🇪","🇵🇰","🇧🇩","🇱🇰","🇳🇵","🇲🇾","🇸🇬","🇮🇩",
+      "🇹🇭","🇻🇳","🇵🇭","🇿🇦","🇳🇬","🇰🇪","🇪🇬","🇲🇦","🇹🇳","🇬🇭","🇪🇹","🇸🇳","🇨🇮","🇨🇲","🇹🇿","🇿🇼",
+    ],
+  },
 ];
 
 export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply, roomName }) {
   const [text, setText]               = useState("");
   const [showEmoji, setShowEmoji]     = useState(false);
-  const [showActions, setShowActions] = useState(false); // mobile extra actions tray
+  const [activeCategory, setActiveCategory] = useState(0);
+  const [showActions, setShowActions] = useState(false);
   const [isTyping, setIsTyping]       = useState(false);
   const [recording, setRecording]     = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -33,13 +142,18 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
   const mediaRef    = useRef(null);
   const chunksRef   = useRef([]);
   const timerRef    = useRef(null);
+  const emojiBodyRef = useRef(null);
 
   useEffect(() => () => {
     clearTimeout(typingTimer.current);
     clearInterval(timerRef.current);
   }, []);
 
-  // close trays when typing starts
+  // Category change pe scroll top
+  useEffect(() => {
+    if (emojiBodyRef.current) emojiBodyRef.current.scrollTop = 0;
+  }, [activeCategory]);
+
   const handleChange = (e) => {
     setText(e.target.value);
     setShowEmoji(false);
@@ -64,9 +178,8 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
   };
 
   const insertEmoji = (emoji) => {
+    // ✅ Picker band nahi hoga — jitne chahein select karo
     setText((prev) => prev + emoji);
-    setShowEmoji(false);
-    inputRef.current?.focus();
   };
 
   const handleFileUpload = async (file, type) => {
@@ -121,7 +234,6 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
       className="px-2 sm:px-4 py-2 sm:py-3 bg-dark-200/80 border-t border-white/5 shrink-0"
       onClick={() => { if (showEmoji) setShowEmoji(false); if (showActions) setShowActions(false); }}
     >
-
       {/* ── Reply Preview ── */}
       {replyTo && (
         <div className="flex items-center gap-2 mb-2 px-3 py-2 bg-white/5 border-l-2 border-primary-500 rounded-r-xl">
@@ -154,19 +266,64 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
         </div>
       )}
 
-      {/* ── Emoji Picker ── */}
+      {/* ── WhatsApp Style Emoji Picker ── */}
       {showEmoji && (
         <div
-          className="mb-2 bg-dark-100 border border-white/10 rounded-2xl p-3 shadow-2xl"
+          className="mb-2 bg-dark-100 border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
+          style={{ height: 300 }}
         >
-          <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto">
-            {EMOJIS.map((e) => (
-              <button key={e} onClick={() => insertEmoji(e)}
-                className="text-xl hover:scale-125 transition-transform hover:bg-white/10 rounded-lg p-1 w-9 h-9 flex items-center justify-center">
-                {e}
+          {/* Category Tabs */}
+          <div className="flex items-center gap-0 border-b border-white/10 overflow-x-auto"
+            style={{ scrollbarWidth: "none" }}>
+            {EMOJI_CATEGORIES.map((cat, idx) => (
+              <button
+                key={cat.name}
+                onClick={() => setActiveCategory(idx)}
+                title={cat.name}
+                className="flex flex-col items-center justify-center px-3 py-2 shrink-0 transition-all relative"
+                style={{
+                  background: activeCategory === idx ? "rgba(255,255,255,0.08)" : "transparent",
+                }}
+              >
+                <span style={{ fontSize: 18 }}>{cat.icon}</span>
+                {/* Active underline */}
+                {activeCategory === idx && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500 rounded-full" />
+                )}
               </button>
             ))}
+          </div>
+
+          {/* Category Label */}
+          <div className="px-3 py-1.5 text-white/30 text-xs font-semibold tracking-wider uppercase">
+            {EMOJI_CATEGORIES[activeCategory].name}
+          </div>
+
+          {/* Emoji Grid */}
+          <div
+            ref={emojiBodyRef}
+            className="overflow-y-auto px-2 pb-2"
+            style={{ height: 220, scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.1) transparent" }}
+          >
+            <div className="grid gap-0.5" style={{ gridTemplateColumns: "repeat(8, 1fr)" }}>
+              {EMOJI_CATEGORIES[activeCategory].emojis.map((emoji, i) => (
+                <button
+                  key={i}
+                  onClick={() => insertEmoji(emoji)}
+                  className="hover:bg-white/10 rounded-lg transition-all hover:scale-125 active:scale-95"
+                  style={{
+                    fontSize: 22,
+                    height: 38,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -177,21 +334,16 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
           className="mb-2 flex items-center gap-2 px-2 py-2 bg-dark-100 border border-white/10 rounded-2xl sm:hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Image */}
           <button onClick={() => { imageRef.current.click(); setShowActions(false); }}
             className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-white/10 transition-colors">
             <FiImage className="w-5 h-5 text-blue-400" />
             <span className="text-white/40 text-xs">Photo</span>
           </button>
-
-          {/* File */}
           <button onClick={() => { fileRef.current.click(); setShowActions(false); }}
             className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-white/10 transition-colors">
             <FiFile className="w-5 h-5 text-green-400" />
             <span className="text-white/40 text-xs">File</span>
           </button>
-
-          {/* Payment */}
           <button onClick={() => { handlePayment(); setShowActions(false); }}
             className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl hover:bg-white/10 transition-colors">
             <MdOutlinePayment className="w-5 h-5 text-yellow-400" />
@@ -209,7 +361,7 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
       {/* ── Main Row ── */}
       <div className="flex items-center gap-1.5 sm:gap-2" onClick={(e) => e.stopPropagation()}>
 
-        {/* + button — mobile only (opens action tray) */}
+        {/* + button mobile */}
         <button
           onClick={() => { setShowActions(!showActions); setShowEmoji(false); }}
           className={`sm:hidden p-2.5 rounded-xl transition-all shrink-0 ${showActions ? "bg-primary-500/20 text-primary-400" : "bg-white/8 text-white/50 hover:bg-white/15"}`}
@@ -219,8 +371,10 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
 
         {/* Desktop action buttons */}
         <div className="hidden sm:flex items-center gap-0.5 shrink-0">
-          <button onClick={() => setShowEmoji(!showEmoji)}
-            className={`p-2 rounded-xl transition-all ${showEmoji ? "text-primary-400 bg-primary-500/20" : "text-white/40 hover:text-white/70 hover:bg-white/10"}`}>
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowEmoji(!showEmoji); setShowActions(false); }}
+            className={`p-2 rounded-xl transition-all ${showEmoji ? "text-primary-400 bg-primary-500/20" : "text-white/40 hover:text-white/70 hover:bg-white/10"}`}
+          >
             <FiSmile className="w-5 h-5" />
           </button>
           <button onClick={() => imageRef.current.click()}
@@ -237,9 +391,9 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
           </button>
         </div>
 
-        {/* Emoji button — mobile only (inline, not in tray) */}
+        {/* Emoji button mobile */}
         <button
-          onClick={() => { setShowEmoji(!showEmoji); setShowActions(false); }}
+          onClick={(e) => { e.stopPropagation(); setShowEmoji(!showEmoji); setShowActions(false); }}
           className={`sm:hidden p-2.5 rounded-xl transition-all shrink-0 ${showEmoji ? "text-primary-400 bg-primary-500/20" : "text-white/50 bg-white/8 hover:bg-white/15"}`}
         >
           <FiSmile className="w-5 h-5" />
@@ -278,7 +432,7 @@ export default function MessageInput({ onSend, onTyping, replyTo, onCancelReply,
         )}
       </div>
 
-      {/* Hint — desktop only */}
+      {/* Hint desktop */}
       <p className="hidden sm:block text-center text-white/15 text-xs mt-2">
         Enter bhejo • Shift+Enter naya line • Mic hold karo voice ke liye
       </p>

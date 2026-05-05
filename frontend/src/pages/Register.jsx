@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
-import { FiUser, FiMail, FiLock, FiUserPlus } from "react-icons/fi";
+import { FiUser, FiMail, FiLock, FiUserPlus, FiEye, FiEyeOff, FiCheck, FiX } from "react-icons/fi";
 
 const AVATAR_COLORS = [
   "#7C3AED", "#DB2777", "#0891B2", "#059669",
@@ -10,13 +10,19 @@ const AVATAR_COLORS = [
 ];
 
 export default function Register() {
-  const [form, setForm] = useState({ name: "", email: "", password: "", bio: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", bio: "" });
   const [selectedColor, setSelectedColor] = useState(AVATAR_COLORS[0]);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  // ✅ Password match check
+  const passwordMatch = form.confirmPassword.length > 0 && form.password === form.confirmPassword;
+  const passwordMismatch = form.confirmPassword.length > 0 && form.password !== form.confirmPassword;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +30,9 @@ export default function Register() {
       return toast.error("Name, email and password are required");
     if (form.password.length < 6)
       return toast.error("Password must be at least 6 characters");
+    // ✅ Confirm password check
+    if (form.password !== form.confirmPassword)
+      return toast.error("Passwords do not match! ❌");
 
     setLoading(true);
     try {
@@ -38,12 +47,13 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-300 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-dark-300 flex items-start justify-center p-4 overflow-y-auto">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 py-8">
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg shadow-primary-600/30">
             💬
@@ -84,6 +94,8 @@ export default function Register() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Name */}
             <div className="relative">
               <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4" />
               <input
@@ -96,6 +108,7 @@ export default function Register() {
               />
             </div>
 
+            {/* Email */}
             <div className="relative">
               <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4" />
               <input
@@ -108,18 +121,75 @@ export default function Register() {
               />
             </div>
 
+            {/* Password */}
             <div className="relative">
               <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4" />
               <input
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password (min 6 characters)"
                 value={form.password}
                 onChange={handleChange}
-                className="input-field pl-11"
+                className="input-field pl-11 pr-11"
               />
+              {/* Show/Hide toggle */}
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+              >
+                {showPassword ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+              </button>
             </div>
 
+            {/* ✅ Confirm Password — NAYA FIELD */}
+            <div className="relative">
+              <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 w-4 h-4" />
+              <input
+                name="confirmPassword"
+                type={showConfirm ? "text" : "password"}
+                placeholder="Confirm password"
+                value={form.confirmPassword}
+                onChange={handleChange}
+                className="input-field pl-11 pr-11"
+                style={{
+                  borderColor: passwordMatch
+                    ? "#059669"
+                    : passwordMismatch
+                    ? "#DC2626"
+                    : undefined,
+                }}
+              />
+              {/* Show/Hide toggle */}
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-10 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+              >
+                {showConfirm ? <FiEyeOff className="w-4 h-4" /> : <FiEye className="w-4 h-4" />}
+              </button>
+              {/* Match / Mismatch icon */}
+              {passwordMatch && (
+                <FiCheck className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />
+              )}
+              {passwordMismatch && (
+                <FiX className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-red-500" />
+              )}
+            </div>
+
+            {/* ✅ Match / Mismatch message */}
+            {passwordMatch && (
+              <p className="text-green-400 text-xs flex items-center gap-1 -mt-2">
+                <FiCheck className="w-3 h-3" /> Passwords match!
+              </p>
+            )}
+            {passwordMismatch && (
+              <p className="text-red-400 text-xs flex items-center gap-1 -mt-2">
+                <FiX className="w-3 h-3" /> Passwords do not match
+              </p>
+            )}
+
+            {/* Bio */}
             <textarea
               name="bio"
               placeholder="Tell us a little about yourself (optional)"
@@ -129,10 +199,15 @@ export default function Register() {
               className="input-field resize-none"
             />
 
+            {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || passwordMismatch}
               className="btn-primary w-full flex items-center justify-center gap-2"
+              style={{
+                opacity: passwordMismatch ? 0.5 : 1,
+                cursor: passwordMismatch ? "not-allowed" : "pointer",
+              }}
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
