@@ -47,7 +47,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-dark-300 flex items-start justify-center p-4 overflow-y-auto">
+    <div className="bg-dark-300 flex items-start justify-center p-4" style={{ position: "fixed", inset: 0, overflowY: "auto" }}>
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-600/20 rounded-full blur-3xl" />
       </div>
@@ -62,7 +62,7 @@ export default function Register() {
           <p className="text-white/50 mt-1">Create a new account 🚀</p>
         </div>
 
-        <div className="glass-card p-8">
+        <div className="glass-card p-5 sm:p-8">
           <h2 className="text-xl font-semibold text-white mb-6">Register</h2>
 
           {/* Avatar preview */}
@@ -73,15 +73,19 @@ export default function Register() {
             >
               {form.name ? form.name[0].toUpperCase() : "?"}
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <p className="text-white/70 text-sm mb-2">Choose avatar color:</p>
-              <div className="flex gap-2 flex-wrap">
+              {/* ✅ FIX: Single row, horizontal scroll — wrap nahi hoga */}
+              <div
+                className="flex gap-2 overflow-x-auto pb-1"
+                style={{ scrollbarWidth: "none", flexWrap: "nowrap" }}
+              >
                 {AVATAR_COLORS.map((color) => (
                   <button
                     key={color}
                     type="button"
                     onClick={() => setSelectedColor(color)}
-                    className="w-7 h-7 rounded-full transition-all duration-200 hover:scale-110"
+                    className="shrink-0 w-7 h-7 rounded-full transition-all duration-200 hover:scale-110"
                     style={{
                       backgroundColor: color,
                       outline: selectedColor === color ? `3px solid ${color}` : "none",
